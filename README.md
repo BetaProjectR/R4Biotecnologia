@@ -28,6 +28,8 @@ Investigador post-doctoral de la Pontificia Universidad Católica de Valparaíso
 
 **ALUMNOS**
 
+[**DANIELA VALENTINA LOPEZ PEREZ**](https://github.com/Danielalpez) 
+
 [**CRISTOBAL LEONARDO DOMINGUEZ BORBOR**](https://github.com/Cristobal-Dominguez)
 
 [**PAULA VALENZUELA AVILÉS**](https://github.com/PaulaValenzuelaaviles)
