@@ -30,16 +30,14 @@ Investigador post-doctoral de la Pontificia Universidad Católica de Valparaíso
 
 [**PAULA VALENZUELA AVILÉS**](https://github.com/PaulaValenzuelaaviles)
 
-
 [**JOSÉ ANDRÉS GALLARDO MATUS**](https://github.com/DrJoseGallardo)
 
-[**Carlos Gutiérrez Ferreira**](https://github.com/CarlosGutierrezFerreira)
+[**CARLOS GUTIÉRREZ FERREIRA**](https://github.com/CarlosGutierrezFerreira)
 
 [**JAQUELINE FLORES SALINAS**](https://github.com/JaquelineFloresS)
 
-
-
 [**EDUARDO SÁNCHEZ CARVAJAL**](https://github.com/EduardoSzC)
+
 
 **CONTENIDOS CENTRALES**
 
