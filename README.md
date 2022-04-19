@@ -27,7 +27,19 @@ Licenciada en Matemáticas por la Universidad Industrial de Santander, Colombia.
 Investigador post-doctoral de la Pontificia Universidad Católica de Valparaíso, Chile.  
 
 **ALUMNOS**
+
 [**CRISTOBAL LEONARDO DOMINGUEZ BORBOR**](https://github.com/Cristobal-Dominguez)
+
+[**PAULA VALENZUELA AVILÉS**](https://github.com/PaulaValenzuelaaviles)
+
+[**JOSÉ ANDRÉS GALLARDO MATUS**](https://github.com/DrJoseGallardo)
+
+[**CARLOS GUTIÉRREZ FERREIRA**](https://github.com/CarlosGutierrezFerreira)
+
+[**JAQUELINE FLORES SALINAS**](https://github.com/JaquelineFloresS)
+
+[**EDUARDO SÁNCHEZ CARVAJAL**](https://github.com/EduardoSzC)
+
 **CONTENIDOS CENTRALES**
 
 **UNIDAD 1. INVESTIGACIÓN REPRODUCIBLE Y ANÁLISIS EXPLORATORIO DE DATOS**.
