@@ -1,0 +1,98 @@
+---
+title: "Pauta para el trabajo personal de análisis exploratorio de datos"
+subtitle: 'DBT 845 - Investigación reproducible y análisis de datos biotecnológicos con R.'
+author:
+ name: Dr. José Gallardo Matus.
+ affiliation: Pontificia Universidad Católica de Valparaíso
+ email: <jose.gallardo@pucv.cl>
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    code_folding: hide
+  word_document: default
+  pdf_document:
+    latex_engine: xelatex
+---
+
+<style>
+#TOC {
+  color: black;
+  font-familiy: Calibri;
+  font-size: 14px;
+  border-color: #708090; 
+}
+body {
+   color: black;
+   font-familiy: Calibri;
+}
+
+pre {
+  color: black;
+  background-color: #F8F8FF;
+}
+# header {
+  color: #800000;
+  font-familiy: Calibri;
+  background-color: #F5F5F5;
+  opacity: 0.8;
+  font-size: 16px;
+}
+</style>
+
+```{r setup, include=FALSE, warning=FALSE,message=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+
+### DESCRIPCIÓN DEL PROYECTO PERSONAL DE ANÁLISIS DE DATOS
+
+El **trabajo** corresponde a un proyecto personal de análisis exploratorio de datos biotecnológicos con R. El trabajo se puede realizar simulando datos, mediante el uso de datos propios (ej. de su trabajo o tesis), o mediante la recopilación de datos de su interes obtenida desde cualquier base de datos pública.
+
+### OBJETIVOS
+
+Los objetivos del trabajo son:
+
+**1)** Elaborar repositorio **GitHub** y mantener control de versiones del trabajo realizado, cada día de trabajo debe quedar registrado en el repositorio.
+
+**2)** Elaborar análisis exploratorio de datos en formato html usando **Rmarkdown**.
+
+### EVALUACIÓN DEL TRABAJO
+
+**Parámetros para el cálculo de la nota.**
+
+|  **Item** | **valor**      |
+|:-------------|:------------------|
+| **Nota máxima** | 7,0 |
+| **Nota mínima** | 1,0 |
+| **Nota aprobación** | 4,0 |
+| **Exigencia para aprobar** | 60% |
+| **Puntaje máximo** | 32 |
+
+**Puntaje según nivel de logro alcanzado en cada componente evaluado.**
+
+|  **Nivel de logro** | **Puntaje**      |
+|:-------------|:------------------|
+| **Excelente** | 4 |
+| **Muy bueno** | 3 |
+| **Bueno** | 2 |
+| **Suficiente** | 1 |
+| **Insuficiente** | 0 |
+
+**Puntaje para cada item a evaluar**  
+
+**Proyecto Git Hub**  
+- Evidencias del uso de control de versiones en github **(4 puntos)**.    
+- Archivo README en github **(4 puntos)**: Incluye título del trabajo, autor y un párrafo con la descripción del problema a resolver. Incluye además un párrafo con la descripción de las variables de estudio, los factores que se desean analizar y el número total de observaciones.   
+
+**Proyecto Rstudio.cloud y reporte con análisis exploratorio de datos**  
+- Describe la variación de las variables de estudio usando histogramas **(4 puntos)**.  
+- Identifica si los datos están balanceados o no entre tratamientos usando tablas de frecuencia **(4 puntos)**.  
+- Establece relación entre variables cuantitativas y factores usando gráficas de correlación, boxplot, interacción o de tamaño de los efectos **(4 puntos)**.  
+- Identifica si existen errores, datos faltantes o valores atípicos **(4 puntos)**.  
+- Resume los datos usando tablas y estadística descriptiva **(4 puntos)**.  
+- Utiliza paquetes para importar datos a R como **readxl** o similar, y paquetes **tidyr** **dplyr**, **ggplot2** para el análisis exploratorio de datos o similar según la naturaleza de los datos **(4 puntos)**.  
+
+ 
