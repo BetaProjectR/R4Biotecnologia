@@ -1,0 +1,441 @@
+---
+title: "Clase 10 - Inferencia estadística"
+author: Dr. José Gallardo Matus 
+institute: Pontificia Universidad Católica de Valparaíso
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output: 
+  beamer_presentation:
+    theme: "Malmoe"
+    colortheme: "beaver"
+    fonttheme: "structurebold"
+    includes:
+            in_header: mystyle.tex
+subtitle: 'DBT 845 - Investigación reproducible y análisis de datos biotecnológicos con R.'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(ggplot2)
+library(UsingR)
+library(dplyr)
+```
+
+# PLAN DE LA CLASE
+**1.- Introducción**
+    
+- ¿Qué es la inferencia estadística?.   
+- ¿Cómo someter a prueba una hipótesis?
+- Pruebas paramétricas
+- Interpretar resultados de análisis de datos con R.
+
+**2.- Práctica con R y Rstudio cloud**
+
+- Someter a prueba diferentes hipótesis estadísticas.
+- Realizar gráficas avanzadas con ggplot2. 
+
+# ¿QUÉ ES LA INFERENCIA ESTADÍSTICA?
+
+**Inferencia estadística :** Son procedimientos que permiten obtener o extraer conclusiones sobre los parámetros de una población a partir de una muestra de datos tomada de ella.
+
+
+```{r, echo=FALSE, out.width = '100%' }
+knitr::include_graphics("Inferencia.png")
+```
+
+**¿Qué inferencia puede hacer de los datos de esta población?**  
+**¿Qué ocurre si la muestra no es aleatoria?**
+
+# INFERENCIA ESTADÍSTICA
+
+**¿Par qué es importante la inferencia estadística?**  
+
+- **Es más económico que hacer un Censo.**  
+  ¿Cuántas especies hay en una bahía, en una laguna, en un bosque? 
+  
+- **Bajo ciertos supuestos permite hacer afirmaciones.**  
+  Con fertilizante A las plantas crecen más que con fertilizante B.  
+  
+- **Bajo ciertos supuestos permite hacer predicciones.**  
+  Mujeres con genotipos mutante del gen BCRA1 tiene 7 veces probabilidad mñas probabilidad de tener cáncer ovárico que mujeres con genotipo normal. 
+  
+# INFERENCIA ESTADÍSTICA: MÉTODOS 
+
+Los métodos de inferencia estadística que revisaremos en este curso son:\
+&nbsp;  
+
+1. **Estimación de parámetros a partir de una muestra.**\
+&nbsp;  
+
+2. **Pruebas de contraste de hipótesis.**\
+&nbsp;  
+
+3. **Modelamiento predictivo.**\
+&nbsp;  
+
+  
+# CONCEPTOS IMPORTANTES
+
+- **Parámetro**  
+Constante que caracteriza a todos los elementos de un conjunto de datos de una población. Se representan con letras griegas.
+
+Promedio de una población (mu) = $\mu$.
+ 
+- **Estadístico**  
+Una función de una muestra aleatoria o subconjunto de datos de una población.
+
+Promedio de una muestra ($\bar{X}$) = $\sum$ $\frac{X_i}{n}$
+
+# ESTIMACIÓN DE PARÁMETROS
+
+**Objetivo**
+Hacer generalizaciones de una población a partir de una muestra.
+
+**Tipos de estimación**    
+
+- **Estimación puntual:** Consiste en asumir que el parámetro tiene el mismo valor que el estadístico en la muestra.  
+
+- **Estimación por intervalos:** Se asigna al parámetro un conjunto de posibles valores que están comprendidos en un intervalo asociado a una cierta probabilidad de ocurrencia. 
+
+**Ejemplo**  
+A partir del muestreo de 30 individuos estimo que el nivel medio de cortisol en el plasma es de 15  $\mu gramos / decilitro$, con un intervalo de confianza del 95% nuestro parámetro estará entre 10 y 20 $\mu gramos / decilitro$ 95 de 100 veces.
+
+# ERROR EN LA ESTIMACIÓN DE PARÁMETROS
+
+**¿Puedo estimar erroneamente un parámetro?**  
+Por supuesto, los errores se producen por violar algunas premisas.
+
+- **Las muestras deben tomarse de forma aleatoria.**  
+  Si muestreo la diversidad de bacterias en una bahía justo en el efluente de una industria, esta muestra no representa ala bahía.
+  Si los peces grandes son más fáciles de capturar que peces pequeños, la biomasa de una laguna será menor que la predicha.
+
+- **Ley de los grandes números.**  
+  ¿Mis variables están correlacionadas?, ¿Cual estimación del parámetro es mejor?.  
+  Compare experimento de 3 muestras v/s 300 muestras.     
+
+# ERROR EN LA ESTIMACIÓN DE PARÁMETROS 2
+
+**¿Puedo estimar erroneamente un parámetro?**  
+
+- **Sesgo del investigador**  
+  Ej. "H0 = la vacuna funciona". Deseo aceptar la hipótesis, repito el ensayo hasta que por azar funciona. No considerando las veces que no funcionó.
+  
+- **Otros**  
+  Errores.  
+  Equipos descalibrados.  
+  Fraude.  
+  
+
+# PRUEBAS DE HIPÓTESIS
+
+**Objetivo**  
+Realizar una afirmación acerca del valor de un parámetro, usualmente contrastando con alguna hipótesis.
+
+**Hipótesis estadísticas**  
+*Hipótesis nula* (H~0~) es una afirmación, usualmente de igualdad. 
+
+*Hipótesis alternativa* (H~A~) es una afirmación que se deduce de la observación previa o de los antecedentes de literatura y que el investigador cree que es verdadera.
+
+**Ejemplo**  
+**H~0~**: El nivel medio de cortisol es = 15 microgramos por decilitro.  
+**H~A~**: El nivel medio de cortisol es > 15 microgramos por decilitro.  
+
+# ¿POR QUÉ DOS HIPÓTESIS?
+
+- Las pruebas estadísticas tienen como propósito someter a prueba una hipótesis nula con la intención de **_rechazarla_** o **refutarla** [(Falsacionismo de Karl Popper)](https://es.wikipedia.org/wiki/Falsacionismo).
+
+- Por lo tanto, los datos nos dirán si **existen o no** evidencias para **rechazar la hipótesis nula**.
+
+**¿Por qué no simplemente aceptar la hipótesis alternativa?**
+
+- Porque pueden existir otros fenómenos no conocidos o no considerados en nuestro experimento que posteriormente permitan a otro investigador rechazar nuestra hipótesis alternativa.	
+
+Lectura complementaria: El método científico según [Juan José Ibáñez, 2006](https://www.madrimasd.org/blogs/universo/2006/10/08/45363)
+
+# ETAPAS DE UNA PRUEBA DE HIPÓTESIS
+
+Para cualquier prueba de hipótesis necesitas lo siguiente:
+
+- Los **_Datos_** (1).
+
+- Una **_hipótesis nula_** (2).
+ 
+- Una **_prueba estadística_** (3) que se aplicará.
+
+- El **_nivel de significancia_** (4) para rechazar la hipótesis.
+
+- La **_distribución_** (5) de la **prueba estadística** respecto de la cual se evaluará la *hipótesis nula* con el estadístico que estimas de tus *datos*.
+
+# DISTRIBUCIÓN DEL ESTIMADOR
+
+- **Distribución muestral del estimador**  
+Dado que un estimador puntual ($\bar{X}$) también es una variable aleatoria, entonces también tiene una distribución de probabilidad asociada.
+
+- **¿Cómo distribuye?**  
+Si X ~ *Normal*($\mu_{x}$,$\sigma_{x}$)
+
+Entonces el estimador de la media tiene
+$\bar{X}$ ~ *Normal*($\mu_{x}$, $\frac{\sigma_x}{\sqrt{n}}$)
+
+- **¿Por qué es importante?**  
+Conocer la distribución de $\bar{X}$ nos permitirá hacer
+pruebas de hipótesis.
+
+# ¿CUÁNDO RECHAZAR **H~0~**?
+
+**Regla de decisión**  
+Rechazo **H~0~** cuando la evidencia observada es poco probable que ocurra bajo el supuesto de que la hipótesis sea verdadera. 
+
+Generalmente $\alpha$ = 0,05 o 0,01.
+
+Es decir, rechazamos cuando el valor del estadístico está en el 5% inferior de la función de distribución muestral.
+
+**Corrección de Bonferroni para comparaciones múltiples**
+
+Pero a veces $\alpha$ = $10^{-8}$  
+
+Ejemplo: Evaluó 50.000 genotipos diferentes para investigar cual está asociado a ser resistente al Coronavirus.
+Solo por azar 2.500 estarán asociados con P < 0,05
+
+# PRUEBA DE HIPÓTESIS: UNA COLA O DOS COLAS
+
+```{r, echo=FALSE, out.width = '100%',fig.align='center'}
+knitr::include_graphics("region_rechazo.png")
+```
+
+
+# ¿PUEDO COMETER UN ERROR EN LAS PRUEBAS DE HIPÓTESIS?
+
+Por supuesto, siempre es posible llegar a una conclusión incorrecta.
+
+**Tipos de errores**  
+Tipo I ($\alpha$) y tipo II ($\beta$), ambos están inversamente relacionados.
+
+ **Decisión** |  **H~0~ es cierta** | **H~0~ es falsa** | 
+---- | ---- | ---- |
+*Aceptamos H~0~* | Decisión correcta | Error tipo II |
+*Rechazamos H~0~* | Error tipo I | Decisión correcta |  
+
+# SIGNIFICANCIA ESTADÍSTICA v/s PRÁCTICA
+**Problema 1**   
+La vacuna aumenta significativamente el número de anticuerpos. 
+
+Sin vacuna = 10 anticuerpos   
+Con vacuna = 11 anticuerpos (10 % de mejora de anticuerpos). 
+
+¿Cuál es la importancia práctica de este hallazgo?  
+
+¿Mejorará la salud de mis peces?
+
+Lectura recomendada: [Ciapponi, 2013](https://www.fundacionmf.org.ar/files/cd887e7d37138361b2983e95532c3786.pdf)
+
+# SIGNIFICANCIA ESTADÍSTICA v/s PRÁCTICA 2
+**Problema 2**
+Si aumento **n** siempre lograré rechazar la hipótesis nula, cada vez para diferencias más pequeñas. ¿Esto tiene significancia práctica?
+
+X e Y están significativamente correlacionados $\rho$ = 0,01 (p-value = 0.01901)
+
+```{r, echo=FALSE, out.width = '80%',fig.align='center'}
+gen.corr.data<- function(rho,n){
+# first step: generate two normal random variables from normal distrbution
+set.seed(123) 
+X <- rnorm(n)
+X2 <- rnorm(n)
+ 
+# second step generate the correlated variable
+ 
+Y<- rho*X+ sqrt(1-rho^2)*X2
+result <-cbind(X,Y)
+return(result)
+}
+
+muestra<-gen.corr.data(0.01,50000)
+plot(muestra)
+dat<- as.data.frame(muestra)
+# cor.test(dat$x1, dat$x3)
+
+```
+
+# SIGNIFICANCIA ESTADÍSTICA v/s PRÁCTICA 3
+
+**Problema 3**  
+
+Significancia basada en un punto de corte arbitrario.
+Abajo dos estudios son clinicamente similares, pero estadísticamente diferentes.
+
+```{r, echo=FALSE, out.width = '100%' }
+knitr::include_graphics("punto_de_corte.png")
+```
+
+# SIGNIFICANCIA ESTADÍSTICA v/s PRÁCTICA 4
+
+**Problema 4**  
+Resultados "estadísticamente no significativos" pueden ser o no ser concluyentes.
+
+```{r, echo=FALSE, out.width = '100%' }
+knitr::include_graphics("no_concluyente.png")
+```
+
+# TIPOS DE PRUEBAS ESTADÍSTICAS
+
+Según la forma de la distribución de la variable aleatoria.
+
+1. **Métodos paramétricos**
+  * Las pruebas de hipótesis usualmente asumen una distribución normal de la variable aleatoria.
+  * Útil para la mayoría de las variables cuantitativas continuas.
+
+2. **Métodos NO paramétricos**
+  * Las pruebas de hipótesis no asumen una distribución normal de la variable aleatoria.
+  * Útil para todas las variables, incluyendo cuantitativas discretas y cualitativas.
+
+
+# CORRELACIÓN ENTRE VARIABLES
+
+```{r, echo=FALSE, out.width = '100%',fig.align='center'}
+knitr::include_graphics("Correlation.png")
+```
+
+
+# HIPÓTESIS PRUEBA DE CORRELACIÓN
+**Hipótesis**  
+$H_0$ : $\rho$ = 0 ausencia de correlación.      
+$H_1$ : $\rho$ $\neq$ 0 existencia de correlación.    
+
+**Supuestos:**  
+	1) Las variables X e Y son continuas y su relación en lineal.     
+	2) La distribución conjunta de (X,Y) es una distribución Bivariable normal.    
+	
+# ESTUDIO DE CASO: RELACIÓN ESTATURA PADRES - HIJOS
+
+```{r, echo=FALSE, out.width = '100%',fig.align='center'}
+plot(father.son$fheight, father.son$sheight, xlab = "ESTATURA PADRES", ylab = "ESTATURA HIJOS")
+```
+
+#  PRUEBA DE CORRELACIÓN DE PEARSON
+
+```{r, echo=TRUE}
+cor.test(father.son$fheight, father.son$sheight)
+
+```
+
+# DISTRIBUCIÓN T STUDENT
+
+Origen: [William Sealy Gosset](https://es.wikipedia.org/wiki/William_Sealy_Gosset), estadístico de la cervecería Guinness.
+
+```{r}
+#create density plots
+curve(dt(x, df=6), from=-5, to=5, col='blue', ylab = 'Density', xlab = "t-values") 
+curve(dt(x, df=10), from=-5, to=5, col='red', add=TRUE)
+curve(dt(x, df=30), from=-5, to=5, col='green', add=TRUE)
+
+#add legend
+legend(-5, .3, legend=c("df=6", "df=10", "df=30"),
+       col=c("blue", "red", "green"), lty=1, cex=1.2)
+```
+
+# PRUEBA DE HIPÓTESIS
+
+- gl correlación = Nº datos - 2 = 1078 - 2
+- Región de no rechazo= t-student (gl=1076) =
+`r round(-qt(0.975, df=1076),2)` - `r round(qt(0.975, df=1076),2)`
+
+
+```{r, out.width = '80%',fig.align='center'}
+curve(dt(x, df=1076), from=-5, to=5, col='blue', ylab = 'Density', xlab = "t-values") 
+abline(v=qt(0.975, df=1076),lty= 2, col = 'blue')
+abline(v= - qt(0.975, df=1076),lty= 2, col = 'blue')
+
+text(3.28, 0.135, "t-obs. = 19,006")
+arrows(x0 = 3.28,
+       y0 = 0.1,
+       x1 = 5.28,
+       y1 = 0.04)
+
+text(0, 0.135, "No rechaza", col="blue")
+text(-3.5, 0.35, "Rechaza H0", col="red")
+text(3.5, 0.35, "Rechaza H0", col="red")
+
+```
+
+
+# PRUEBA DE COMPARACIÓN DE MEDIAS
+
+```{r , echo=FALSE, out.width = '80%',fig.align='center'}
+knitr::include_graphics("t-student.png")
+```
+
+
+# HIPÓTESIS COMPARACIÓN DE MEDIAS
+**Hipótesis**  
+$H_0$ : $\mu_1$ = $\mu_2$.  
+$H_1$ : $\mu_1$ $\neq$ $\mu_2$  
+
+**Supuestos**  
+1) Las variables X es continua.  
+2) Distribución normal.  
+
+# ESTUDIO DE CASO: CORTISOL
+
+[Adaptado de Kobayashi, et al 2019](https://www.frontiersin.org/articles/10.3389/fpubh.2019.00376/full)       
+```{r, fig.cap="Nivel de cortisol luego de caminar en zona urbana v/s zona boscosa."}
+dat<- data.frame(Zona=rep(c("Urbano", "Bosque"), each=10), Cortisol=c(rnorm(10, 10, 2),rnorm(10, 8, 2)))
+ boxplot(dat$Cortisol ~ dat$Zona, xlab = "Sexo", ylab = "Cortisol microgramos / decilitro")
+# t.test(Peso ~ Sexo, tilapia, alternative = c("two.sided"), var.equal=TRUE)
+```
+
+# PRUEBA DE T PARA DOS MUESTRAS INDEPENDIENTES
+
+```{r, echo=TRUE}
+t.test(Cortisol ~ Zona, dat, alternative = c("two.sided"),
+       var.equal=TRUE)
+```
+
+# PRUEBA DE HIPÓTESIS
+
+- gl correlación = Nº datos - 2 = 20 - 2
+- Región de no rechazo distribución t-student (gl=18)=
+`r round(-qt(0.975, df=18),2)` - `r round(qt(0.975, df=18),2)`
+
+```{r, out.width = '80%',fig.align='center'}
+curve(dt(x, df=18), from=-5, to=5, col='blue', ylab = 'Density', xlab = "t-values") 
+abline(v=qt(0.975, df=18),lty= 2, col = 'blue')
+abline(v= - qt(0.975, df=18),lty= 2, col = 'blue')
+
+text(-4, 0.135, "t-obs. = -3,21")
+arrows(x0 = -3.28,
+       y0 = 0.1,
+       x1 = -3.21,
+       y1 = 0.004)
+
+text(0, 0.135, "No rechaza", col="blue")
+text(-3.5, 0.35, "Rechaza H0", col="red")
+text(3.5, 0.35, "Rechaza H0", col="red")
+
+```
+
+
+# PRÁCTICA ANÁLISIS DE DATOS
+
+
+```{r, echo=FALSE, out.width = '100%',fig.align='center'}
+knitr::include_graphics("testing_hyphotesis.jpeg")
+```
+
+# RESUMEN DE LA CLASE
+
+1. **Conceptos básicos de inferencia estadística**  
+    * Estadístico y parámetro.\
+&nbsp;    
+    
+2. **Conceptos básicos de pruebas de hipótesis**  
+    * Hipótesis nula, alternativa.\
+&nbsp;      
+    
+3. **Distribución de probabilidad**  
+    * t-student.  \
+&nbsp;    
+  
+4. **Realizar pruebas de hipótesis**
+    * Test de correlación.  
+    * Test de comparación de medias para 2 muestras independientes.
+
+4. **Realizar gráficas avanzadas con ggplot2**.    

@@ -1,0 +1,403 @@
+---
+title: "Guía de trabajo Inferencia estadística"
+subtitle: 'DBT 845 - Investigación reproducible y análisis de datos biotecnológicos con R.'
+author:
+ name: Dr. José A. Gallardo y Dra. María Angélica Rueda.
+ affiliation: Pontificia Universidad Católica de Valparaíso
+ email: <jose.gallardo@pucv.cl>
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    code_folding: hide
+  word_document: default
+  pdf_document: default
+---
+
+<style>
+#TOC {
+  color: black;
+  font-familiy: Calibri;
+  font-size: 14px;
+  border-color: #708090; 
+}
+body {
+   color: black;
+   font-familiy: Calibri;
+}
+
+pre {
+  color: black;
+  background-color: #F8F8FF;
+}
+# header {
+  color: #800000;
+  font-familiy: Calibri;
+  background-color: #F5F5F5;
+  opacity: 0.8;
+  font-size: 16px;
+}
+</style>
+
+---
+
+#### **Introducción**
+
+**Parámetros y estadísticos**
+
+Parámetro: Constante que caracteriza a todos los elementos de un conjunto de datos de una población. Se representan con letras griegas.
+
+Promedio de una población = $\mu$  (mu).
+ 
+Estadístico: Una función de una muestra aleatoria o subconjunto de datos de una población.
+
+**Promedio de una muestra**: $$\bar{X} = \frac{\sum_{i=1}^{n} x_{i}}{n}$$
+
+**Varianza de una muestra**: $$s^{2} = \frac{SS}{N - 1} = \frac{\sum (x_{i} - \bar{x})^{2}}{N - 1}$$
+
+**Correlación entre x e y**: $$r = \frac {{SS}_{xy}}{\sqrt {{SS}_{xx}{SS}_{yy}}}$$
+
+donde, 
+$${SS}_{xx} = \sum (x - \bar{x})^2 = \sum x^2 - \frac {(\sum x)^2}{n}$$
+$${SS}_{xy} = \sum (x - \bar{x})(y - \bar{y}) = \sum xy - \frac {(\sum x)(\sum y)}{n}$$
+**Inferencia estadística**
+
+Corresponde a la aplicación de diferentes métodos que permiten obtener o extraer conclusiones sobre los parámetros de una población a partir de una muestra de datos tomada en ella. También, es posible calcular el grado de fiabilidad (probabilidad) de que los resultados extraídos de un estudio son verdaderos o falsos.
+
+**Estimación v/s pruebas de hipótesis**
+
+Estimación: Se utiliza para **"estimar"** parámetros de una población a partir de una muestra de una variable aleatoria.
+
+Ejemplo: Estimar el promedio del peso del cuerpo de la población a partir de una muestra de 30 animales.
+
+Pruebas de hipótesis: Se utiliza para realizar una afirmación acerca del valor de un parámetro, usualmente contrastando con una hipótesis.
+
+Ejemplo: Probar que el peso promedio del cuerpo de un grupo de peces es mayor si son alimentados con la dieta A en vez de la dieta B.
+
+**Estimación puntual v/s por intervalo**
+
+Estimación puntual: consiste en asumir que el parámetro tiene el mismo valor que el estadístico en la muestra.
+
+Estimación por intervalos: se asigna al parámetro un conjunto de posibles valores que están comprendidos en un intervalo asociado a una cierta probabilidad de ocurrencia.
+
+**Hipótesis nula v/s hipótesis alternativa**
+
+Hipótesis nula (**H~0~**): Es una hipótesis que el investigador trata de refutar, rechazar o anular. Se le denomina “nula” porque se expresa como la igualdad entre dos grupos.
+
+Hipótesis alternativa (**H~1~**): Es lo que el investigador realmente piensa que es verdadero.
+
+#### **Objetivos de aprendizaje**
+
+Los objetivos de aprendizaje de esta guía son:
+
+**1**. - Elaborar hipótesis estadísticas.
+
+**2**. - Realizar análisis de inferencia estadística para comparación de datos cuantitativos continuos. 
+
+**3**. - Elaborar un reporte dinámico en formato html con **[Rmarkdown](https://rmarkdown.rstudio.com/)**.
+
+#### Librerías
+
+|  **Librería** | **Función**      |
+|:-------------|:------------------|
+| **ggplot2** |  Permite la visualización de datos, es usado para realizar gráficas avanzadas con R **_Hoja de referencia_**.|
+| **psych** | Permite realizar histogramas y correlaciones de datos en formato de matriz. |
+| **readxl** | Permite importar datos desde archivos con formato .xls y .xlsx. |
+| **stats**| Posee funciones para hacer las pruebas de hipótesis para la media y diferencia de medias (con muestras independientes). También, para hacer la prueba de hipótesis de correlación. |
+| **pander** | Muestra en formato tabla los resultados de un objeto. |
+| **knitr** | Librería para generar reportes dinámicos. |
+
+#### **Comandos**
+
+A continuación, se presentan algunos comandos que deberá usar para resolver los ejercicios de esta guía.
+
+**1.-** Visualiza la variación de tus datos de forma avanzada con: **ggplot()**
+
+**2.-** Realiza la correlación lineal entre x e y: **cor(x,y)**
+
+**3.-** Realiza la prueba de hipótesis para la correlación entre x e y: **cor.test()**
+
+**4.-** Extrae los intervalos de confianza para la correlación: **cor.test()$conf.int**
+
+**5.-** Calcula la media **mean()** y la varianza **var()** de la variable en estudio.
+
+**6.-** Realiza la prueba de hipótesis para la media y diferencia de medias (con muestras independientes): 
+**t.test()**
+
+**7.-** Extrae los intervalos de confianza para la media y diferencia de medias (con muestras independientes):
+**t.test()$conf.int**
+
+**8.-** Muestra en formato de tabla los resultados de las pruebas de hipótesis: **pander()**
+
+### **Ejercicio 1.** **Elaborar archivo Rmarkdown**
+
+Usando lo aprendido en la unidad 1 del curso elabore y configure un archivo o file con extensión **.Rmd** y configúrelo para exportar el resultado como un reporte dinámico tipo **html**.
+
+Utilice el siguiente ejemplo para completar la información del metadatos: Título: Reporte inferencia estadística, nombre del autor: Su nombre.
+
+Luego guarde inmediatamente su *script* como **script_10_nombre_apellido.Rmd**.  
+
+### **Ejercicio 2.** **Configuración del reporte**
+
+En el primer bloque de códigos o **chunk** configure los comandos de la siguiente manera **_knitr::opts_chunk$set(echo = TRUE)_** y cargue las librerías  **stats**, **graphics**, **ggplot2**, **psych**, **readxl**, **pander**, **dplyr** y **knitr**.
+
+```{r setup, include=TRUE, warning=FALSE,message=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
+# Librería stats está instalada por defecto en la base de R
+library(stats)
+
+# Librería graphics está instalada por defecto en la base de R
+library(graphics)
+
+# Librería psych para análisis de datos de matrices 
+library(psych)
+
+# Librería para gráficas avanzadas
+library(ggplot2)
+
+# Librería para importar datos
+library(readxl)
+
+# Librería para mostrar en formato tabla los resultados de un objeto
+library(pander)
+
+# Librería para usar funciones de tidyverse
+library(dplyr)
+
+# Librería para hacer tablas
+library(knitr)
+
+```
+
+Ejecute cada uno de los siguientes ejercicios en uno o más bloques de códigos diferentes. Sea ordenado y documente su reporte adecuadamente.
+
+### **Ejercicio 3.** **Prueba de hipótesis de correlación**
+
+
+Los datos **animal.xlsx** se refieren a la longitud (**Longitud_cm**) y el peso (**Peso_g**) de 100 animales.
+
+**a).** Importe el set de datos **animal.xlsx** usando la función **read_excel()** de la librería **readxl**, llame al objeto Animal. Explore el set de datos usando las funciones **head()**, **str()** y **summary()**.
+
+```{r}
+Animal <- read_excel("animal.xlsx")
+head(Animal)
+str(Animal)
+summary(Animal)
+```
+
+**b).** Realice un análisis exploratorio de datos de las variables bajo estudio. Usando **dplyr** Incluya una tabla con los estimadores puntuales de los promedios y las varianzas de cada variable. 
+
+Aquí el valor que debe obtener en dos estimadores de media y varianza.
+```{r}
+# Promedio y varianza de la variable Longitud
+Promedio_Longitud <- mean(Animal$Longitud_cm)
+Var_Longitud <- var(Animal$Longitud_cm)
+
+# Promedio y varianza de la variable Peso
+Promedio_Peso <- mean(Animal$Peso_g)
+Var_Peso <- var(Animal$Peso_g)
+Promedio_Longitud
+Promedio_Peso
+Var_Longitud
+Var_Peso
+```
+
+Incluya un histograma de cada variable con la función hist(). Use la función par(mfrow = c(1,2)) antes de graficar para colocar ambos gráficos en un panel con dos columnas.
+
+```{r, echo=FALSE, warning=FALSE,message=FALSE}
+# Histogramas de las variables Longitud y Peso
+par(mfrow = c(1,2))
+hist(Animal$Longitud_cm, main= "Hist Longitud", xlab= "Longitud (g)", ylim= c(0,30),col="cyan")
+hist(Animal$Peso_g, main= "Hist Peso", xlab= "Peso (g)", ylim= c(0,30),col="dodgerblue")
+
+
+```
+
+Finalmente, elabore con ggplot2 un gráfico de dispersión de puntos con **geom_point()** para observar la relación lineal entre las variables Peso **_vs_** Longitud. Para incluir una linea de regresión lineal incluya a su código este comando **geom_smooth(method=lm, se=FALSE)**.
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+# Gráfico de dispersión entre x e y
+ggplot(Animal, aes(x=Longitud_cm, y=Peso_g))+
+  geom_point()+
+  ggtitle("Peso (g) vs Longitud (cm)") + geom_smooth(method=lm, se=FALSE)+ 
+  scale_x_continuous(name = "Longitud (cm)", limits = c(10, 30), breaks = seq(10, 30, 5))+ 
+  scale_y_continuous(name = "Peso (g)", limits = c(50,250), breaks = seq(50, 250, 50))+ 
+  theme(plot.title = element_text(hjust = 0.5), panel.background = element_blank(), axis.line = element_line(color="black"), axis.line.x = element_line(color="black"))+ 
+  theme_bw()
+```
+
+
+
+**c).** Calcule la correlación entre Longitud y Peso, use la función cor(). 
+
+```{r}
+cor(Animal$Longitud_cm,Animal$Peso_g)
+```
+
+**d).** ¿Es está correlacción estadísticamente distinta de cero?. Escriba su hipótesis nula y alternativa para este experimento.
+
+
+```{r}
+# **H~0~**: $\rho$ = 0
+
+# **H~1~**: $\rho$ $\ne$ 0
+```
+
+**e).** Realice una prueba de hipótesis para la correlación entre X e Y usando la función **cor.test()**, (llame al objeto cor_L_P) y obtenga los intervalos de confianza usando **cor.test()$conf.int** (llame a este objeto IC_cor_L_P) . Considere en **cor.test()** como nivel de confianza para la prueba el 95% y el método de Pearson. Para mostrar los resultados de la prueba de correlación usar la función **pander()** sobre el objeto **cor_L_P**, en el parámetro **_caption_** de la función **pander()** colocar "Prueba de hipótesis para el coeficiente de correlación entre Longitud y Peso.".
+
+```{r, echo=TRUE}
+cor_L_P<- cor.test(x=Animal$Longitud_cm , y=Animal$Peso_g , method = "pearson", conf.level = 0.95)
+cor_L_P
+
+IC_cor_L_P <-cor_L_P$conf.int
+IC_cor_L_P
+
+pander::pander(cor_L_P, caption = "Prueba de hipótesis para el coeficiente de correlación entre Longitud y Peso.")
+```
+
+**f).** Interprete los resultados.
+```{r, echo=TRUE}
+# De los resultados obtenidos de la prueba, se observa que el p-valor= 1.261e-73 es menor al nivel de significación del 5%; concluyendo que hay evidencia estadísticamente significativa para rechazar H0. Por lo tanto, la correlación entre la longitud y el peso es distinta de cero.  
+
+```
+
+### **Ejercicio 4.** **Prueba de hipótesis para la media**
+
+Los datos **Salmones_Machos.xlsx** se refieren el peso (**Peso_g**) de 100 salmones machos del sur de chile.
+
+**a).** Importe el set de datos **Salmones_Machos.xlsx** usando la función **read_excel()** de la librería **readxl**, llame al objeto Salmones_Machos. Explore el set de datos usando las funciones **head()**, **str()** y **summary()**. 
+
+```{r}
+Salmones_Machos <- read_excel("Salmones_Machos.xlsx")
+head(Salmones_Machos)
+str(Salmones_Machos)
+summary(Salmones_Machos)
+```
+
+**b).** A partir del set de datos de **Salmones_Machos** elabore un histograma para la variable **Peso**. Use el comando **ggplot()** y el argumento **aes(x)**. Agregue el comando **geom_histogram()** para obtener el histograma y el comando **labs(x="Peso (g)",title="Histograma de la variable Peso(g)")**.
+
+```{r, echo=FALSE, warning=FALSE,message=FALSE}
+Salmones_Machos %>% 
+  ggplot(aes(x=Peso_Machos))+
+  geom_histogram(color="white", fill="blue", bins = 10)+
+  labs(x="Peso (g)",title="Histograma de la variable Peso(g)")
+
+```
+
+**c).**Calcular la media y la varianza del peso de los machos.Luego,realice una tabla los estimadores puntuales del promedio y la varianza de la variable peso llamada Tabla_peso. Muestre la Tabla_peso en formato knitr::kable(), colocar en el parámetro **caption** "Media y varianza de salmones machos".
+
+```{r, echo=TRUE}
+Tabla_Peso<- Salmones_Machos %>% 
+  summarize(Media_M = mean(Peso_Machos),
+             Var_M = var(Peso_Machos))
+
+# Tabla con los datos
+knitr::kable(Tabla_Peso,caption ="Media y varianza de salmones machos")
+```
+
+**d).** ¿El peso promedio de los machos es mayor a 190 (g)?. Escriba su hipótesis nula y alternativa para este experimento.
+
+```{r, echo=TRUE}
+# H~0~**: $$ \mu_{M} \le 190$$
+
+# **H~1~**: **H~0~**: $$ \mu_{M} > 190$$
+```
+
+**e).** Realice una prueba de hipótesis para el peso promedio de los machos usando la función **t.test()**, (llame al objeto DifMed_M) y obtenga los intervalos de confianza usando **t.test()$conf.int** (llame a este objeto IC_DifMed_M) . Considere en **t.test** como nivel de confianza para la prueba el 95% y los parámetros, **alternative = c("greater")** y **mu = 190**. Para mostrar los resultados de la prueba de diferencia de medias usar la función **pander()** sobre el objeto **DifMed_M**, en el parámetro **_caption_** de la función **pander()** colocar "Prueba de hipótesis para el peso promedio de machos."
+
+```{r, echo=TRUE}
+DifMed_M <- t.test(x=Salmones_Machos$Peso_Machos,mu = 190, alternative = c("greater"), conf.level = 0.95)
+DifMed_M
+
+IC_DifMed_M <-DifMed_M$conf.int
+IC_DifMed_M
+
+pander::pander(DifMed_M, caption = "Prueba de hipótesis para el peso promedio de machos")
+```
+
+**f).** Interprete los resultados.
+```{r}
+# De los resultados obtenidos de la prueba, se observa que el p-valor= 0.9863 es mayor al nivel de significación del 5%; concluyendo que no hay evidencia estadísticamente significativa para rechazar H0. Por lo tanto, el peso promedio de los machos es menor o igual a 190 (g).
+
+```
+
+### **Ejercicio 5.** **Prueba de hipótesis para la diferencia de medias con muestras independientes**
+
+Los datos **Salmones_data.xlsx** se refieren el peso (**Peso_g**) de 100 salmones hembras y 100 salmones machos del sur de chile.
+
+**a).** Importe el set de datos **Salmones_data.xlsx** usando la función **read_excel()** de la librería **readxl**, llame al objeto Salmones. Transforme la variable Sexo en factor con **as.factor()**. Explore el set de datos usando las funciones **head()**, **str()** y **summary()**. 
+
+```{r}
+Salmones <- read_excel("Salmones_data.xlsx")
+Salmones$Sexo <- as.factor(Salmones$Sexo)
+head(Salmones)
+str(Salmones)
+summary(Salmones)
+```
+
+**b).** A partir del set de datos de **Salmones** elabore un gráfico de cajas y bigotes para la variable **Peso**. Use el comando **ggplot()** y el argumento **aes(x,y,fill)** para seleccionar los datos, el factor **Sexo**, la variable respuesta **Peso** y el fill **Sexo**. Agregue el comando **geom_boxplot()** para obtener el boxplot y el comando **theme(legend.position="none")**. Además, adicione, el comando **labs(x="Sexo",y="Peso (g)",title="Distribución entre las variables Peso vs Sexo (g)")**.
+
+Calcular la media y la varianza del peso de los machos como de la hembras.Luego, realice una tabla los estimadores puntuales de los promedios y las varianzas de la variable peso para cada sexo llamada Tabla. Muestre la Tabla en formato knitr::kable(), colocar en el parámetro **caption** "Medias y varianzas de salmones machos y hembras".
+
+```{r, echo=TRUE, warning=FALSE,  message=FALSE}
+
+Salmones%>% 
+  ggplot(aes(x=Sexo,y=Peso,fill=Sexo))+
+      geom_boxplot()+
+     theme(legend.position="none")+
+     labs(x="Sexo",y="Peso (g)",title="Distribución entre las variables Sexo vs Peso(g)")
+
+Machos <- Salmones[Salmones$Sexo=="Macho", ]
+Prome_Peso_Machos <- mean(Machos$Peso)
+Var_Peso_Machos <- var(Machos$Peso)
+
+Hembras <- Salmones[Salmones$Sexo=="Hembra", ]
+Prome_Peso_Hembras <- mean(Hembras$Peso)
+Var_Peso_Hembras <- var(Hembras$Peso)
+
+Tabla <- data.frame(Prome_Peso_Machos, Var_Peso_Machos,Prome_Peso_Hembras,Var_Peso_Hembras )
+colnames(Tabla) <- c("Peso Promedio Machos","Varianza_Peso_Machos", "Peso Promedio Hembras","Varianza_Peso_Hembras" )
+# Tabla con los datos
+knitr::kable(Tabla,caption ="Medias y varianzas de salmones machos y hembras")
+```
+
+**c).** Calcule la diferencia de los pesos promedio de los machos y las hembras. 
+
+```{r}
+Dif_Med_M_H <- Prome_Peso_Machos - Prome_Peso_Hembras
+```
+
+**d).** ¿El peso promedio de los machos es diferente al peso promedio de las hembras?. Escriba su hipótesis nula y alternativa para este experimento.
+
+```{r, echo=TRUE}
+# **H~0~**: $$ \mu_{M} - \mu_{F} = 0$$
+
+# **H~1~**: $$ \mu_{M} - \mu_{F} \ne 0$$
+```
+
+**e).** Realice una prueba de hipótesis para la diferencia de los pesos promedios de los machos y de las hembras usando la función **t.test()**, (llame al objeto DifMed_M_H) y obtenga los intervalos de confianza usando **t.test()$conf.int** (llame a este objeto IC_DifMed_M_H) . Considere en **t.test** como nivel de confianza para la prueba el 95% y los parámetros **paired=FALSE, var.equal=TRUE**. Para mostrar los resultados de la prueba de diferencia de medias usar la función **pander()** sobre el objeto **DifMed_M_H**, en el parámetro **_caption_** de la función **pander()** colocar "Prueba de hipótesis para la diferencia de pesos promedios entre machos y hembras."
+
+```{r, echo=TRUE}
+Machos <- Salmones[Salmones$Sexo=="Macho", ]
+
+Hembras <- Salmones[Salmones$Sexo=="Hembra", ]
+
+DifMed_M_H<- t.test(x=Machos$Peso, y=Hembras$Peso,paired=FALSE, var.equal=TRUE,
+       conf.level = 0.95)
+DifMed_M_H
+
+IC_DifMed_M_H <-DifMed_M_H$conf.int
+IC_DifMed_M_H
+
+pander::pander(DifMed_M_H, caption = "Prueba de hipótesis para la diferencia de pesos promedios entre machos y hembras")
+```
+
+
+**f).** Interprete los resultados.
+```{r}
+# De los resultados obtenidos de la prueba, se observa que el p-valor= 0.2868 es mayor al nivel de significación del 5%; concluyendo que no hay evidencia estadísticamente significativa para rechazar H0. Por lo tanto, los pesos promedios de machos y hembras son los mismos.
+
+```
