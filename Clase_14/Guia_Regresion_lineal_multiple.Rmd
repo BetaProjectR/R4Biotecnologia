@@ -1,0 +1,236 @@
+---
+title: "Guía Regresión lineal múltiple"
+subtitle: 'DBT 845 - Investigación reproducible y análisis de datos biotecnológicos con R.'
+author:
+ name: Dr. José A. Gallardo y Dra. María Angélica Rueda.
+ affiliation: Pontificia Universidad Católica de Valparaíso
+ email: <jose.gallardo@pucv.cl>
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    code_folding: hide
+  word_document: default
+  pdf_document: default
+---
+
+<style>
+#TOC {
+  color: black;
+  font-familiy: Calibri;
+  font-size: 14px;
+  border-color: #708090; 
+}
+body {
+   color: black;
+   font-familiy: Calibri;
+}
+
+pre {
+  color: black;
+  background-color: #F8F8FF;
+}
+# header {
+  color: #800000;
+  font-familiy: Calibri;
+  background-color: #F5F5F5;
+  opacity: 0.8;
+  font-size: 16px;
+}
+</style>
+
+### MODELOS LINEALES
+
+Sea $Y$ una variable respuesta continua y $X_1,…,X_p$ variables predictoras, un modelo de regresión lineal múltiple se puede representar como,
+ 
+$$Y_{i} = \beta_{0} + \beta_{1} X_{i1} + \beta_{2} X_{i2} + ... + \beta_{p} X_{ip} + \epsilon_{i}$$
+
+Supuestos:
+
+1) No existe multicolinealidad.
+
+2) Los residuos distribuyen **normalmente**.
+
+3) Existe homogeneidad de varianzas.
+
+
+#### **Objetivos de aprendizaje**
+
+Los objetivos de aprendizaje de esta guía son:
+
+**1**. - Realizar análisis de regresión lineal múltiple.
+
+**2**. - Realizar gráficas avanzadas con ggplot2. 
+
+**3**. - Elaborar un reporte dinámico en formato html con **[Rmarkdown](https://rmarkdown.rstudio.com/)**.
+
+#### EJERCICIOS
+
+## ESTUDIO DE CASO: EXPRESIÓN DE GEN ASOCIADO A MADURACIÓN EN SALMÓN
+
+En este estudio de caso trabajaremos con un set de datos reales del estudio publicado por [Verta et al. 2020](https://doi.org/10.1371/journal.pgen.1009055). En este estudio se analiza la expresión del gen vgll3, el cual se ha asociado a la maduración en salmón del Atlántico.
+
+La variable respuesta que analizaremos se denomina **TotCopies** y representa a las copias totales del gen expresado en la gonada de los peces. Las variables predictoras son **DPH** que representa a los días por eclosión (Days post hatching) y **VGLL3** que representa el genotipo de los peces el cual puede ser *EE* asociado a maduración temprana (Early) *LL* asociado a maduración tardía (Late). 
+
+### **Ejercicio 1.** Elaborar y configurar Reporte en formato .Rmd
+
+Elabore un documento .Rmd y configure su reporte para exportar en html. Instale solo las liberías que utilice para el análisis de los datos.
+
+```{r setup, include=TRUE, warning=FALSE,message=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(readxl)
+library(ggplot2)
+library(dplyr)
+library(multcomp)
+library(psych)
+library(car)
+```
+
+Ejecute cada uno de los siguientes ejercicios en uno o más bloques de códigos diferentes. Sea ordenado y documente su reporte adecuadamente.
+
+### **Ejercicio 2.** Exploratorio set de datos vgll3_ancova.
+
+Importe el set de datos **vgll3_ancova.xlsx** y realice un análisis exploratorio de datos de **TotCopies** y **DPH**. 
+
+Incluya: 
+
+**a).** Transformación de variable **VLLL3** a factor y resumen de datos.
+
+```{r, warning=FALSE, echo=FALSE}
+
+vgll3_dat <- read_excel("vgll3_ancova.xlsx")
+vgll3_dat$VGLL3 <- as.factor(vgll3_dat$VGLL3)
+summary(vgll3_dat)
+```
+
+**b).** Histograma de la variable respuesta **TotCopies**.
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE}
+
+ggplot(vgll3_dat, aes(x=TotCopies))+
+  geom_histogram(color="darkblue", fill="lightblue", bins = 8)
+
+```
+
+
+**c).** Boxplot de la variable respuesta **TotCopies** en función del genotipo **vgll3**.
+
+```{r, echo=FALSE}
+vgll3_dat %>%
+  ggplot(aes(x=VGLL3, y= TotCopies, fill=VGLL3)) +
+  geom_boxplot() +
+  labs(y="Expresión del gen vgll3 (Nºcopias / ng RNA)", x="vgll3", 
+       subtitle="Expresión del gen vgll3 en función del genotipo")
+```
+
+**d).** Elabore una gráfica de dispersion con la relación entre **TotCopies** en función del genotipo **vgll3** y de los **DPH**. Investigue y use el comando **geom_jitter** para dar formato a los puntos de tamaño y trnasparencia a los puntos. Use el comando **scale_color_manual()** para colorear con rojo el genotipo EE y con azul el LL.
+
+```{r, echo=FALSE}
+
+vgll3_dat %>%
+ggplot(aes(DPH,TotCopies,color=VGLL3,group=VGLL3)) +
+  geom_jitter(size=4,alpha=0.7) +
+  theme_classic() + 
+  scale_color_manual(values=c("blue","red")) + 
+  xlab("Days post-hatching") + 
+  ylab(expression(~italic(vgll3)~'copies / ng RNA'))
+```
+
+
+### **Ejercicio 3.** Análisis de covarianza.
+
+**a).** Realice un análisis de regresión lineal para investigar la asociación entre **TotCopies** y todas las variables predictoras usando las funciones **lm()**, **summary()**. 
+
+Interprete los resultados del modelo lineal y responda las siguientes preguntas:   
+- ¿Qué representan los estimadores Beta: Intercept, VGLL3LL y DPH?. 
+- ¿Qué estimadores de Beta son significativamente distintas de cero?. 
+- ¿Cuál es la bondad de ajuste del modelo $R^2$ ajustado? 
+- ¿Puedo predecir la expresión del gen con este modelo lineal?
+
+```{r warning=FALSE, message=FALSE, echo=FALSE}
+
+fitFull <- lm(TotCopies ~ VGLL3 + DPH, vgll3_dat)
+summary(fitFull)
+
+```
+
+**b).** Realice una gráfica de regresión lineal para representar la asociación de cada genotipo con la variable respuesta. Para ello investigue y use el comando **geom_smooth()**. 
+
+```{r}
+vgll3_dat %>%
+ggplot(aes(DPH,TotCopies,color=VGLL3,group=VGLL3)) +
+  geom_jitter(size=4,alpha=0.7) +
+  theme_classic() + 
+   geom_smooth(method="lm", formula=y~x, se=T) +
+  scale_color_manual(values=c("blue","red")) + 
+  xlab("Days post-hatching") + 
+  ylab(expression(~italic(vgll3)~'copies / ng RNA'))
+```
+
+**c).** Realice un análisis de covarianza e interprete los resultados, use la función **anova()** sobre el modelo lineal realizado en el ejercicio 3a.
+
+```{r, echo=FALSE}
+anova(fitFull)
+```
+
+### **Ejercicio 4.** Evaluación de supuestos modelo completo.
+
+**a).** Evalue los supuestos de multicolinealidad, normalidad y homogeneidad de varianzas.
+
+```{r}
+# Multicolinealidad por vif
+vif(fitFull)
+
+# Normalidad
+shapiro.test (residuals (fitFull))
+plot(fitFull, which = 2)
+
+# Homogeneidad de varianzas usando plot
+plot(fitFull, which = 1)
+
+```
+
+### **Ejercicio 5.** Comparación modelo completo y modelo reducido
+
+Dado que uno de los factores (Genotipo) no afecta a la variable respuesta. Elabore un modelo reducido y compare usando usando los residuales y el criterio AIC. 
+
+**a).** Elabore un modelo reducido solo con la variable **VGLL3**, equivalente al boxplot del ejercicio 2c.
+
+```{r, echo=FALSE}
+fitSimple <- lm(TotCopies ~ VGLL3, vgll3_dat)
+summary(fitSimple)
+```
+
+**b).** Compare los modelos completo usando residuales.
+Ej. anova(fulmodel, simplemodel)
+
+¿Hay diferencias significativas entre los modelos?
+
+```{r, echo=FALSE}
+# Comparación usando residuales
+res <- anova(fitFull, fitSimple)
+pander::pander(res, caption = "Comparación modelos usando residuales.")
+
+```
+
+**c).** Compare los modelos completo usando los crirterio AIC y BIC.
+Ej. AIC(fulmodel, simplemodel)
+
+¿Cuál es el mejor modelo según el criterio AIC?
+
+```{r, echo=FALSE}
+# Comparación usando AIC
+aic <- AIC(fitFull, fitSimple)
+
+pander::pander(aic, caption = "Comparación modelos usando AIC.")
+```
+
+¿Cuál es el mejor modelo según el criterio BIC?
+```{r, echo=FALSE}
+# Comparación usando AIC
+aic <- BIC(fitFull, fitSimple)
+
+pander::pander(aic, caption = "Comparación modelos usando BIC.")
+```
