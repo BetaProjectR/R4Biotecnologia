@@ -1,0 +1,439 @@
+---
+title: "Clase 15 Introducción a Modelos Lineales Generales"
+author: Dr. José Gallardo Matus y Dra. María Angélica Rueda
+institute: Pontificia Universidad Católica de Valparaíso
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output: 
+  beamer_presentation:
+    theme: "Malmoe"
+    colortheme: "beaver"
+    fonttheme: "structurebold"
+    includes:
+            in_header: mystyle.tex
+subtitle: 'DBT 845 - Investigación reproducible y análisis de datos biotecnológicos con R.'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(car)
+library(lmtest)
+library(psych)
+library(readxl)
+library(nlme)
+library(lme4)
+library(stats)
+library(boot)
+library(readxl)
+library(dplyr)
+library(ggplot2)
+library(ggpmisc)
+library(knitr)
+library(car)
+library(lmtest)
+library(psych)
+library(gridExtra)
+library(nortest)
+# library(sjPlot)
+library(lme4)
+library(reshape2)
+```
+
+# **PLAN DE LA CLASE**
+
+**1.- Introducción**
+    
+- Modelos lineales generales ¿Qué son y para que sirven?
+
+- Ejemplos de modelos lineales generales.
+
+- Interpretación de MLG con R.
+
+**2.- Práctica con R y Rstudio cloud**
+
+- Ajustar modelos lineales generales.
+
+- Realizar gráficas avanzadas con ggplot2.
+
+- Elaborar un reporte dinámico en formato html.
+
+
+# **INTRODUCCIÓN**
+
+Durante años, los modelos lineales clásicos (normales) han sido usados como la metodología de análisis a la hora de intentar describir la mayoría de los fenómenos que ocurren en el entorno. 
+
+**¿Qué podemos hacer cuando los datos no se ajustan a un modelo lineal?**
+
+- Muchas veces se recurre a transformar la variable respuesta.
+
+- Pero al aplicar la transformación a la variable respuesta, **NO** necesariamente se cumplirían todos los supuestos. 
+
+- Las interpretaciones deben hacerse en términos de la **variable transformada**.
+
+
+# **¿QUÉ SON LOS MODELOS LINEALES GENERALES?**
+
+Los modelos lineales generales extienden a los modelos lineales clásicos admitiendo distribuciones no normales para la variable respuesta y modelando funciones de la media.
+
+Los MLG incluyen como casos particulares a los siguientes modelos:
+
+- Modelos Lineales Clásicos: **Modelo de regresión lineal simple, modelo de regresión lineal múltiple, ANOVA , ANCOVA.**
+
+- Modelos no lineales (con variables predictoras elevadas a alguna potencia (cuadráticas, cúbicas, etc).
+
+- Modelo de regresión logística.
+
+# **¿POR QUÉ USAR MODELOS LINEALES GENERALES?**
+
+- Modelos que reflejan mejor la naturaleza de los datos.
+
+- Hay variables respuestas que son **_resistentes_** a ser transformadas (**por ej.** Variables discretas, o variables con gran cantidad de ceros).
+
+- Las relaciones lineales generalmente fuerzan las predicciones del espacio de la variable respuesta (**por ej.** Predicción de valores negativos cuando la variable respuesta es un conteo). 
+
+
+# **REGRESIÓN NO LINEAL CUADRÁTICA**
+
+En este ejemplo vamos a comparar el modelo lineal *_vs_*. el modelo no lineal con término cuadrático.
+
+```{r, message=FALSE, out.width = '80%', fig.align='center'}
+clearance <-  read_excel("ParticleClearance.xlsx", sheet = 1)
+
+# Create data filters
+mussel <- filter(clearance, sample == "mussel")
+control <- filter(clearance, sample == "control")
+```
+
+
+```{r, out.width = '75%', message=FALSE, fig.align='center'}
+My_Theme = theme(
+  axis.title.x = element_text(size = 20),
+  axis.text.x = element_text(size = 20),
+  axis.title.y = element_text(size = 20),
+  axis.text.y = element_text(size = 20))
+
+microplot <- ggplot(data = mussel, aes(x = time, y = microparticle_concentration)) +
+  geom_point(position = position_jitter(w = 0, h = 0.1) ) +
+  labs(x = "Time (minutes)", y = expression(Concentration~microparticles~ml^-1)) +
+  scale_shape_manual(values=c(1,2)) +
+  stat_smooth(method='loess',formula=y~x, se=T)+
+  scale_color_brewer(palette="Set1") + 
+  theme(legend.position="none") +
+  theme(panel.border=element_blank(), axis.line=element_line())
+microplot+My_Theme
+```
+
+# **MODELO LINEAL** 
+
+**Modelo 1:** 
+
+**log_microparticle_concentration** = $\beta_{0} + \beta_{1} time + \epsilon$
+
+```{r}
+reg_mussel <- lm(log_microparticle_concentration ~ time, data=mussel)
+
+summary(reg_mussel)$coef %>% kable()
+
+```
+
+$R^2$ = `r  round(summary(reg_mussel)$r.squared,2)`, *p-val* = `r anova(reg_mussel)$'Pr(>F)'[1]`
+
+# **MODELO NO LINEAL (INCLUYE TÉRMINO CUADRÁTICO)**
+
+**Modelo 2:** 
+
+**log_microparticle_concentration** = $\beta_{0} + \beta_{1} time + \beta_{2} {time}^2 + \epsilon$
+
+```{r}
+reg_mussel_2 <- lm(log_microparticle_concentration ~ poly(time,2), data=mussel)
+
+summary(reg_mussel_2)$coef %>% kable()
+
+```
+
+$R^2$ = `r  round(summary(reg_mussel_2)$r.squared,2)`, *p-val* = `r anova(reg_mussel_2)$'Pr(>F)'[1]`
+
+# **COMPARACIÓN DE MODELOS** 
+
+* Modelo 1: 
+
+**log_microparticle_concentration** = $\beta_{0} + \beta_{1} time + \epsilon$
+
+* Modelo 2: 
+
+**log_microparticle_concentration** = $\beta_{0} + \beta_{1} time + \beta_{2} {time}^2 + \epsilon$
+
+```{r}
+anova(reg_mussel,reg_mussel_2) %>% kable()
+```
+
+# **REGRESIÓN LOGÍSTICA**
+
+- La regresión logística es útil para predecir variables respuesta de naturaleza binaria: Presencia o ausencia, sano o enfermo, maduro o no maduro, macho o hembra.
+
+- Las principales supuestos del modelo de regresión logística son:
+
+a) Respuesta binaria: La variable respuesta debe ser binaria.
+
+b) Independencia: las observaciones deben ser independientes.
+
+c) Multicolinealidad: se requiere de muy poca a ninguna multicolinealidad entre los predictores (para regresión logística múltiple).
+
+d) Linealidad: entre la variable independiente y el logaritmo natural de la variable respuesta.
+
+# **REGRESIÓN LOGÍSTICA SIMPLE**
+
+Modelo de regresión logística simple:
+
+$$p(Y=1) = \frac{e^{\beta_0 + \beta_1X_1}}{1 + e^{\beta_0 + \beta_1X_1}}$$
+$p(Y=1)$ = Probabilidad de que la variable respuesta dicotómica tome un valor de 1 (exito).   
+$X_1$ = Variable predictora.   
+$B_0$ = Intercepto.   
+$B_1$ = Pendiente.  
+
+# **ESTUDIO DE CASO 2: MADURACIÓN EN SALMÓN DEL ATLÁNTICO**
+
+En este estudio de caso trabajaremos con un subconjunto de la base de datos relacionada a la maduración en salmones machos (n=90). 
+
+|  **variable** | **Descripción**| 
+|:-------------|:------------------|
+| **Fish** | Identificador del salmón|
+| **Genotype** | Genotipo | 
+| **Gonad** | Peso de gónada |
+| **Maturation** | estado de maduración (1: maduro) o (0: inmaduro) | 
+
+
+```{r, echo=FALSE}
+maduracion <- read_excel("Maturation.xlsx")
+maduracion$Genotype <- as.factor(maduracion$Genotype)
+maduracion <- maduracion%>% 
+              select("Fish","Genotype","Gonad","GSI","Maturation")
+mod_lineal <- lm(Maturation ~ Gonad, data = maduracion)
+mod_logit <- glm(Maturation ~ Gonad, 
+                family= binomial, data = maduracion)
+formula1 <- y ~ x
+
+```
+
+# **RELACIÓN ENTRE MADURACIÓN VS PESO DE GÓNADA**
+
+```{r, message=FALSE, warning=FALSE}
+
+My_Theme = theme(
+  axis.title.x = element_text(size = 20),
+  axis.text.x = element_text(size = 20),
+  axis.title.y = element_text(size = 20),
+  axis.text.y = element_text(size = 20))
+
+p<- ggplot(data = maduracion, aes(x = Gonad, y = Maturation)) +
+  geom_point(aes(color = as.factor(Maturation)), shape = 1) + 
+  theme(axis.text.x = element_text(size = 10,face="bold",colour="black"))+
+  theme(axis.text.y = element_text(size = 10,face="bold",colour="black"))+
+  theme_bw()  +
+  labs(x= "Peso de gónada", y = "Maduración")+
+  theme(legend.position = "none")+ 
+  theme(panel.border=element_blank(), axis.line=element_line())
+p+My_Theme
+```
+
+# **REGRESIÓN LINEAL ENTRE MADURACIÓN VS PESO DE GÓNADA**
+
+¿Qué supuestos no se cumplen de la regresión lineal?   
+```{r, message=FALSE, warning=FALSE}
+q <- ggplot(data = maduracion, aes(x = Gonad, y = Maturation)) +
+  geom_point(aes(color = as.factor(Maturation)), shape = 1) + 
+  theme(axis.text.x = element_text(size = 10,face="bold",colour="black"))+
+  theme(axis.text.y = element_text(size = 10,face="bold",colour="black"))+
+  geom_smooth(method = "lm", color = "gray20", se = FALSE) +
+  stat_poly_eq(aes(label = paste0("atop(", ..eq.label.., ",", ..rr.label.., ")")), formula = formula1, parse = TRUE, size = 8)+
+  theme_bw()  +
+  labs(x="Peso de gónada",y = "Probabilidad de Maduración") +
+    scale_y_continuous(limits = c(0, 1)) +
+  theme(legend.position = "none")+
+  theme(panel.border=element_blank(), axis.line=element_line())
+q+My_Theme
+```
+
+# **MODELO LINEAL**
+
+**Maduración** = $\beta_{0} + \beta_{1}$ Peso de gónada + $\epsilon$
+
+```{r}
+mod_lineal <- lm(Maturation ~ Gonad, data = maduracion)
+summary(mod_lineal)$coef %>% kable()
+
+```
+
+$R^2$ = `r  round(summary(mod_lineal)$r.squared,2)`, *p-val* = `r anova(mod_lineal)$'Pr(>F)'[1]`
+
+
+# **PREDICCIÓN LOGÍSTICA**
+
+```{r,message=FALSE, warning=FALSE}
+# Representación gráfica del modelo.
+s <- ggplot(data = maduracion, aes(x = Gonad, y = Maturation)) +
+  geom_point(aes(color = as.factor(Maturation)), shape = 1) + 
+  theme(axis.text.x = element_text(size = 10,face="bold",colour="black"))+
+  theme(axis.text.y = element_text(size = 10,face="bold",colour="black"))+
+  geom_hline(aes(yintercept=0.50), color="red")+ 
+  stat_function(fun = function(x){predict(mod_logit,
+                                          newdata = data.frame(Gonad = x),
+                                          type = "response")}) +
+  theme_bw() +
+  labs(title = "Regresión logística", x="Peso de gónada",
+       y = "Probabilidad de Maduración") +
+  theme(legend.position = "none")+
+  theme(panel.border=element_blank(), axis.line=element_line())
+s+My_Theme
+```
+
+# **REGRESIÓN LOGÍSTICA SIMPLE**
+```{r, echo=TRUE}
+mod_logit <- glm(Maturation ~ Gonad, 
+                family= binomial, data = maduracion)
+summary(mod_logit)$coef %>% kable()
+```
+
+# EJEMPLO PREDICCIÓN DE AMBOS MODELOS
+
+Probabilidad de estar maduro para un peso de gónada de 4 gramos.
+
+::: columns
+
+:::: column
+
+**REGRESIÓN LINEAL**
+
+```{r, echo=FALSE}
+# Predicción con modelo lineal
+maduracion$madurar_lm <- predict(mod_lineal,maduracion,type="response")
+#Determinamos  que el salmón madura cuando haya una probabilidad de maduración superior al 50%
+maduracion$predic <- ifelse(maduracion$madurar_lm > 0.5,1,0)
+
+#Predecimos si un salmón madura o no para un peso de gónada de 4
+Prob.mad_lm <- data.frame(Gonad=4)
+Prediccion_lm <- predict(mod_lineal, Prob.mad_lm, type = "response")
+Prediccion_lm <- data.frame(Prediccion_lm)
+colnames(Prediccion_lm) <- c("Probabilidad de maduración")
+```
+
+
+```{r}
+
+Prediccion_lm%>% kable() 
+
+if (Prediccion_lm >= 0.5) {
+  print("Madura")
+}else{
+  print("No madura")
+}
+```
+::::
+
+:::: column
+
+**REGRESIÓN LOGÍSTICA**
+
+```{r, echo=FALSE}
+maduracion$madurar <- predict(mod_logit,maduracion,type="response")
+
+maduracion$predic <- ifelse(maduracion$madurar > 0.5,1,0)
+
+
+#Predecimos si un salmón madura o no para un peso de gónada de 4
+
+Prob.mad <- data.frame(Gonad=4)
+Prediccion_logis <- predict(mod_logit, Prob.mad, type = "response")
+Prediccion_logis <- data.frame(Prediccion_logis)
+colnames(Prediccion_logis) <- c("Probabilidad de maduración")
+```
+
+
+```{r}
+
+Prediccion_logis%>% kable() 
+
+if (Prediccion_logis >= 0.5) {
+  print("Madura")
+}else{
+  print("No madura")
+}
+```
+
+::::
+
+:::
+
+# **RELACIÓN ENTRE MADURACIÓN VS GENOTIPO**
+
+Genotipo E = Maduración temprana o Early.  
+Genotipo L = Maduración tardía o Late.  
+
+¿Qué genotipo tiene mayor probabilidad de maduración?  
+
+```{r, echo=TRUE}
+table(maduracion$Maturation, maduracion$Genotype) %>% 
+  kable()
+
+```
+
+# **REGRESIÓN LOGÍSTICA MÚLTIPLE**
+
+Modelo de regresión logística múltiple:
+
+$$p(Y=1) = \frac{e^{\beta_0 + \beta_1X_1 + \cdots + \beta_pX_p }}{1 + e^{\beta_0 + \beta_1X_1 + \cdots + \beta_pX_p}}$$
+$p(Y=1)$ = Probabilidad de que la variable respuesta dicotómica tome un valor de 1 (exito).     
+$X_1$ = Variable predictora 1.  
+$X_p$ = Variable predictora p.   
+$B_0$ = Intercepto.     
+$B_1$ = Pendiente variable $X_1$.  
+$B_p$ = Pendiente variable $X_p$.  
+
+# **REGRESIÓN LOGÍSTICA MÚLTIPLE**
+
+```{r, echo=TRUE}
+mod_logit_mult <- glm(Maturation ~ Gonad + 
+                      Genotype,family= binomial, 
+                      data = maduracion)
+summary(mod_logit_mult)$coef %>% kable()
+```
+
+# **REGRESIÓN LOGÍSTICA (MODELO NULO)**
+
+```{r, echo=TRUE}
+mod_nulo <- glm(Maturation ~ 1, 
+                family= binomial, data = maduracion)
+summary(mod_nulo)$coef %>% kable()
+```
+
+
+# **COMPARACIÓN DE MODELOS AIC**
+
+```{r, echo=TRUE}
+AIC(mod_nulo,mod_logit,mod_logit_mult)%>% kable()
+```
+
+# **ANOVA PARA CADA MODELO**
+
+```{r}
+anova(mod_nulo, test ='Chisq')%>% kable()
+
+anova(mod_logit, test ='Chisq')%>% kable()
+
+anova(mod_logit_mult, test ='Chisq')%>% kable()
+
+```
+
+# **COMPARACIÓN DE MODELOS (ANOVA)**
+
+```{r}
+anova(mod_nulo,mod_logit,mod_logit_mult, test ='Chisq')%>% kable()
+
+```
+
+# **RESUMEN DE LA CLASE**
+
+**1).** Revisión de conceptos: modelos lineales generales.
+
+**2).** Construir y ajustar modelos lineales generales.
+
+    

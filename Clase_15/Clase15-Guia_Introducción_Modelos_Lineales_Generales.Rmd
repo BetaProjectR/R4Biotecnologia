@@ -1,0 +1,193 @@
+---
+title: "Guía Modelos Lineales Generales"
+subtitle: 'Diplomado Análisis de datos con R para la acuicultura'
+author:
+ name: Dr. José A. Gallardo y Dra. María Angélica Rueda.
+ affiliation: Pontificia Universidad Católica de Valparaíso
+ email: <jose.gallardo@pucv.cl>
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    code_folding: hide
+  word_document: default
+  pdf_document: default
+---
+
+<style>
+#TOC {
+  color: black;
+  font-familiy: Calibri;
+  font-size: 14px;
+  border-color: #708090; 
+}
+body {
+   color: black;
+   font-familiy: Calibri;
+}
+
+pre {
+  color: black;
+  background-color: #F8F8FF;
+}
+# header {
+  color: #800000;
+  font-familiy: Calibri;
+  background-color: #F5F5F5;
+  opacity: 0.8;
+  font-size: 16px;
+}
+</style>
+
+### MODELOS LINEALES GENERALES
+
+Los modelos lineales generales extienden a los modelos lineales clásicos admitiendo distribuciones no normales para la variable respuesta y modelando funciones de la media.
+
+Los MLG son, por tanto, una extensión de los modelos lineales que permiten
+utilizar distribuciones no normales de los errores (binomiales, Poisson, gamma, etc) y varianzas no constantes. 
+
+Características de un modelo lineal general (MLG)
+
+1). La variable respuesta/residuos pueden tener distribución normal u otros tipos de distribuciones.
+
+2). Existencia de observaciones correlacionadas.
+
+3). Puede existir heterogeneidad de varianzas.
+
+Incumplimiento de los supuestos:
+
+1) Hay observaciones correlacionadas.
+
+2) Los residuos se pueden o no distribuir **normalmente**.
+
+3) Varianza no constante.
+
+
+#### **Objetivos de aprendizaje**
+
+Los objetivos de aprendizaje de esta guía son:
+
+**1**. - Ajustar  modelos lineales generales. 
+
+**2**. - Realizar gráficas. 
+
+**3**. - Elaborar un reporte dinámico en formato html con **[Rmarkdown](https://rmarkdown.rstudio.com/)**.
+
+#### EJERCICIOS
+
+## ESTUDIO DE CASO: PREDECIR RIESGO DE ATAQUE AL CORAZÓN.
+
+En este estudio de caso trabajaremos con datos de un estudio cardiovascular de los residentes de la ciudad de Framingham, Massachusetts. [Fuente: Kaggle](https://www.kaggle.com/). 
+
+La variable respuesta se denomina **TenYearCHD = 10 year risk of coronary heart disease CHD** y es binaria (1 sigoifica “Yes”, “0” significa “No”)** y las variables predictoras son:.
+
+**Demographic:**.   
+• Sex: male or female(Nominal).   
+• Age: Age of the patient;(Continuous - Although the recorded ages have been truncated to whole numbers, the concept of age is continuous).   
+
+**Behavioral:**.   
+• Current Smoker: whether or not the patient is a current smoker (Nominal).    
+• Cigs Per Day: the number of cigarettes that the person smoked on average in one day.(can be considered continuous as one can have any number of cigarettes, even half a cigarette.).    
+
+**Medical:(history)**.   
+• BP Meds: whether or not the patient was on blood pressure medication (Nominal).   
+• Prevalent Stroke: whether or not the patient had previously had a stroke (Nominal).   
+• Prevalent Hyp: whether or not the patient was hypertensive (Nominal).   
+• Diabetes: whether or not the patient had diabetes (Nominal).    
+
+**Medical(current)**.   
+• Tot Chol: total cholesterol level (Continuous).   
+• Sys BP: systolic blood pressure (Continuous).   
+• Dia BP: diastolic blood pressure (Continuous).   
+• BMI: Body Mass Index (Continuous).   
+• Heart Rate: heart rate (Continuous - In medical research, variables such as heart rate though in fact discrete, yet are considered continuous because of large number of possible values.).   
+• Glucose: glucose level (Continuous).   
+
+## **Ejercicio 1.** Elaborar y configurar Reporte en formato .Rmd
+
+Elabore un documento .Rmd y configure su reporte para exportar en html. Instale solo las librerías que utilice para el análisis de los datos.
+
+```{r setup, include=TRUE, warning=FALSE,message=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(readxl)
+library(ggplot2)
+library(multcomp)
+library(psych)
+library(car)
+library(readr)
+library(lmtest)
+library(boot)
+```
+
+Ejecute cada uno de los siguientes ejercicios en uno o más bloques de códigos diferentes. Sea ordenado y documente su reporte adecuadamente.
+
+## **Ejercicio 2.** Exploratorio Heart attack dataset
+
+Importe el set de datos **Heart_attack_dataset.xlsx** y realice un análisis exploratorio de datos. 
+
+Incluya: 
+
+**a).** Resumen estadístico de todas las variables con summary() y head().
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE}
+Heart_data <- read_excel("Heart_attack_dataset.xlsx")
+summary(Heart_data)
+head(Heart_data)
+
+```
+
+**b).** Ajuste un modelo lineal general (**Regresión logística simple**) donde la variable **TenYearCHD** es la variable respuesta y la variable **age** es la variable predictora. Use la función **glm()** y haga el **summary()** del modelo.
+
+```{r}
+modelo1 <- glm(TenYearCHD ~ age, 
+                family= binomial, data = Heart_data)
+summary(modelo1)
+```
+
+**c).** Realice el diagrama de dispersión de **TenYearCHD** v/s **age** usando la función geom_point() y use la función geom_smooth(method = "glm", method.args = list(family = "binomial")). Colocar título, nombre del eje x, nombre del eje y. Usar tema **theme_bw()**
+
+```{r, echo=FALSE, warning=FALSE, error=FALSE, message=FALSE}
+ggplot(data = Heart_data, aes(x = age, y = TenYearCHD)) +
+  geom_point() + 
+  geom_smooth(method = "glm", method.args = list(family = "binomial")) +
+  theme_bw() +
+  labs(title = "Regresión logística", x="Edad",
+       y = "Probabilidad de ataque al corazón") 
+```
+
+
+**d).** Ajuste un modelo lineal general (**Regresión logística múltiple**) donde la variable **TenYearCHD** es la variable respuesta y las variables **age** y **male** como variables predictoras. Use la función **glm()** y haga el **summary()** del modelo.
+
+```{r, echo=FALSE}
+modelo2 <- glm(TenYearCHD ~ age + male, 
+                family= binomial, data = Heart_data)
+summary(modelo2)
+```
+
+**e).** Compare los modelos de regresión logítica simple y múltiple de los items anteriores usando el críterio de AIC. Use la función **AIC()**. Diga según el criterio de AIC ¿Cuál sería el mejor modelo?
+
+```{r, echo=FALSE}
+AIC(modelo1,modelo2)
+```
+
+**f).** Compare los modelos de regresión logítica simple y múltiple de los items anteriores haciendo un anova. Use la función **anova(modelo1, modelo2,test ='Chisq')**. Diga cuál sería el mejor modelo y porqué?
+
+```{r, echo=FALSE}
+anova(modelo1,modelo2,test ='Chisq')
+```
+
+## **Ejercicio 3.** Ajuste de forma libre otros modelos lineales generales de Regresión logística múltiple.
+
+a) Considere al menos el modelo completo donde la variable **TenYearCHD** es la variable respuesta y todas las otras variables son las variables predictoras. Use la función **glm()** y haga el **summary()** del modelo completo.
+
+b) ¿Puede descartar alguna variable del modelo completo porque no es significativa?. 
+
+c) Compare al menos el modelo completo con los modelos del ejercicio 2 y algún otro modelo que usted elija y determine que modelo predice de mejor manera la probabilidad de sufrir un ataque al corazón.
+
+d) Realice diagramas de dispersión de **TenYearCHD** v/s otras variables predictoras que son significativas.
+
+
+
+
