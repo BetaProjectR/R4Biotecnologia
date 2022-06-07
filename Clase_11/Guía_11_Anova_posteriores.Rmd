@@ -1,0 +1,387 @@
+---
+title: "Guía 11 Análisis de varianza y posteriores."
+subtitle: 'Diplomado en análisis de datos con R para la acuicultura.'
+author:
+ name: Dr. José A. Gallardo y Dra. María Angélica Rueda.
+ affiliation: Pontificia Universidad Católica de Valparaíso
+ email: <jose.gallardo@pucv.cl>
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    code_folding: hide
+  word_document: default
+  pdf_document: default
+---
+
+<style>
+#TOC {
+  color: black;
+  font-familiy: Calibri;
+  font-size: 14px;
+  border-color: #708090; 
+}
+body {
+   color: black;
+   font-familiy: Calibri;
+}
+
+pre {
+  color: black;
+  background-color: #F8F8FF;
+}
+# header {
+  color: #800000;
+  font-familiy: Calibri;
+  background-color: #F5F5F5;
+  opacity: 0.8;
+  font-size: 16px;
+}
+</style>
+
+---
+
+#### **Introducción**
+
+**Análisis de Varianza**
+
+Es una herramienta de inferencia estadística muy usada en el campo de investigación científico-técnica de las ciencias biológicas y en particular en la acuicultura. El ANOVA es un método estadístico cuya finalidad es probar hipótesis referidas a los parámetros de posición de dos o más poblaciones en estudio.
+
+**Comparación a posteriori**
+
+Existen diversas pruebas a posteriori para analizar el porque se rechaza la hipotesis nula que se está considerando en nuestro estudio; es decir, si rechazamos la hipótesis nula del ANOVA, la pregunta que podríamos hacernos es la siguiente **¿cuál o cuáles de las medias poblacionales en estudio son las diferentes?** Existen diversas pruebas a posteriori para analizar está problemática; no obstante, en esta guía usaremos la **_prueba de Tukey_**.
+
+#### **Objetivos de aprendizaje**
+
+Los objetivos de aprendizaje de esta guía son:
+
+**1**. - Elaborar hipótesis estadísticas.
+
+**2**. - Realizar análisis de varianza y comparaciones a posteriori. 
+
+**3**. - Elaborar un reporte dinámico en formato html con **[Rmarkdown](https://rmarkdown.rstudio.com/)**.
+
+#### **Comandos**
+
+A continuación, se presentan algunos comandos que deberá usar para resolver los ejercicios de esta guía.
+
+**1.-** **lm():** se utiliza para ajustar modelos lineales. También, se puede utilizar para realizar regresiones, análisis de varianza de un factor o dos factores de clasificación (se puede considerar interacción entre los factores) y análisis de covarianza (aunque aov puede proporcionar una interfaz más conveniente para el ANOVA).
+
+**2.-** **aov():** se usa para ajustar un modelo de análisis de varianza.
+
+**3.-** **anova():** se usa para hacer un ANOVA sobre el objeto obtenido al ajustar un modelo con las funciones lm() o aov().
+
+**4.-** **TukeyHSD():** se usa para hacer la prueba a posteriori de Tukey.
+
+**5.-** **grid.arrange():** se usa para hacer gráficas multiples en un panel.
+
+**Nota:** La prueba Tukey trabaja sobre un objeto **_aov_**, no sobre un objeto lm.
+
+### **Ejercicio 1.** **Elaborar archivo Rmarkdown**
+
+Usando lo aprendido en la unidad 1 del curso elabore y configure un archivo o file con extensión **.Rmd** y configúrelo para exportar el resultado como un documento dinámico **html**.
+
+Complete la información de metadatos con: 
+Título: Reporte Anova y posteriores.
+Nombre del autor: Su nombre.
+
+Luego guarde inmediatamente su *script* como **script_anova_nombre_apellido.Rmd**. 
+
+### **Ejercicio 2.** **Configuración del reporte**
+
+En el primer bloque de códigos o **chunk** configure los comandos de la siguiente manera **_knitr::opts_chunk$set(echo = TRUE)_** y cargue las librerías **ggplot2**, **readxl**, **pander**, **dplyr**, **knitr** y **gridExtra**.
+
+```{r setup, include=TRUE, warning=FALSE,message=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# Librería para gráficas avanzadas
+library(ggplot2)
+
+# Librería para importar datos
+library(readxl)
+
+# Librería para mostrar en formato tabla los resultados de un objeto
+library(pander)
+
+# Librería para usar funciones de tidyverse
+library(dplyr)
+
+# Librería para hacer tablas
+library(knitr)
+
+library(gridExtra)
+
+```
+
+### **Ejercicio 3.** **Anova a un criterio de clasificación con dos niveles**
+
+La base de datos **Tilapia_nilotica_data.xlsx** contiene información del peso final **(Final_Weight_g)** y cepa **(Cepa)** de 200 tilapias. Los investigadores desean evaluar si el crecimiento medido como peso final es diferente entre dos Cepas comerciales de *Oreochromis niloticus* (**Spring** **_vs_** **cepa B**). Ambas cepas se evaluaron durante 157 días (34 días en vivero y 123 en engorde) en la finca Los Pozos, El Rosario, Sinaloa, México. La cantidad de observaciones del set de datos **Tilapia_nilotica_data.xlsx** es igual a 200, 100 observaciones para cada cepa. Datos simulados a partir de información estadística del siguiente artículo [Espinosa-Chaurand et al., 2019](https://scielo.conicyt.cl/scielo.php?pid=S0718-560X2019000300440&script=sci_arttext)
+
+**a).**  Formule la hipótesis nula y alternativa para este experimento.
+
+```{r}
+#**H~0~**: $$ \mu_{Spring} = \mu_{B}$$
+
+#**H~1~**: $$ \mu_{Spring} \ne \mu_{B}$$
+```
+
+**b).** Importe el set de datos **Tilapia_nilotica_data.xlsx** usando la función **read_excel()** de la librería **readxl**, llame al objeto Tilapia_nilotica. Transformar en factor la variable Cepa con la función **as.factor()**. Explore el set de datos usando las funciones **head()**, **str()** y **summary()**.
+
+```{r}
+Tilapia_nilotica <- read_excel("Tilapia_nilotica_data.xlsx")
+Tilapia_nilotica$Cepa <- as.factor(Tilapia_nilotica$Cepa)
+head(Tilapia_nilotica)
+str(Tilapia_nilotica)
+summary(Tilapia_nilotica)
+```
+
+**c).** Realice un análisis exploratorio de datos de la variable bajo estudio usando **geom_histogram()** y **geom_boxplot()**. A partir del set de datos de elabore un gráfico de cajas y bigotes para la variable **Final_Weight_g**.  Utilice grid.arrange() para colocar ambas gráficas en un panel.
+
+```{r}
+plot1 <- Tilapia_nilotica %>%
+          ggplot(aes(x= Final_Weight_g))+
+                geom_histogram(color="white", fill="black", position = "identity", bins = 15)+
+                theme(legend.position="none")+
+                labs(x="Final_Weight (g)",title="Distribución Weight")
+
+
+plot2 <- Tilapia_nilotica %>%
+          ggplot(aes(x= Cepa,y=Final_Weight_g,fill=Cepa))+
+                geom_boxplot()+
+                theme(legend.position="none")+
+                labs(x="Cepa",y="Final_Weight (g)",title="Boxplot Weight por Cepa")
+
+grid.arrange(plot1, plot2, ncol=2, nrow =1)
+
+```
+
+**d).** Incluya una tabla con los estimadores puntuales de los promedios y las varianzas de la variable Final_Weight_g para cada nivel del factor Cepa, incluya tambien el N muestral. Use el paquete dplyr y los comandos **group_by()**, **summarise()**.
+
+```{r, echo=TRUE, warning=FALSE,message=FALSE}
+# Promedio y varianza de la variable Final_Weight_g para la Cepa Spring. 
+
+Tabla = Tilapia_nilotica %>% group_by(Cepa) %>%
+summarize(N= n(), Mean = mean(Final_Weight_g),
+          Variance= var(Final_Weight_g))
+
+
+knitr::kable(Tabla,caption ="Estimadores puntuales de media y varianza de Final_Weight(g) para las cepas Spring y B")
+```
+
+
+**e).** Realice el ajuste del siguiente modelo usando la función **lm()**, donde los parámetros son los siguientes: variable respuesta **Final_Weight_g** y como factor de clasificación **Cepa**, como set de datos (data=Tilapia_nilotica). Llame al objeto model1_anova1. Utilice el simbolo ~ para relacionar la variable respuesta con el factor de clasificación. Luego, realice el anova() del objeto model1_anova1. 
+
+```{r}
+model1_anova1 <- lm(Final_Weight_g ~ Cepa, data=Tilapia_nilotica)
+anova(model1_anova1)
+```
+
+Use la función pander::pander() para mostrar los resultados del modelo (model1_anova1), coloque en el parámetro caption "ANOVA a una vía de clasificación."
+```{r}
+pander::pander(model1_anova1, caption = "ANOVA a una vía de clasificación.")
+```
+
+
+
+**f).** Interprete los resultados.
+```{r}
+#El efecto cepa es estadísticamente significativo (p valor menor al nivel de significación del 5%). En consecuencia se rechaza la hipótesis nula. Por lo tanto, existen diferencias entre los pesos finales promedios de las cepa Spring y B. 
+
+```
+
+### **Ejercicio 4.** **Anova a un criterio de clasificación con tres niveles y Prueba a Posteriori Tukey**
+
+En este estudio de caso trabajaremos con un set de datos de trucha arcoíris en una estación de cultivo del Ecuador (n=54). 
+
+Las variables de estudio se describen a continuación:
+
+|  **variable** | **Descripción**| **Tipo de efecto/variable**|
+|:-------------|:------------------| :------------------|
+| **Probiotico** | Dosis de probiótico fresh plus: 0 g/kg (P0: alimento sin probiotico) , 6 g/kg (P1= 6 gramos de probiotico por kilo de alimento) y 12 g/Kg (P2: 12 gramos de probiotico por kilo de alimento ). | Criterio de clasificación.|
+| **Fuente** | Dos fuentes de agua: F1: Agua Natural del río Papallacta - normalmente usada en la crianza de los peces y  F2: mezcla de agua natural con agua geotermal | Criterio de clasificación.|
+| **Tiempo_Dias** | Cantidad de días en los que se llevó a cabo el experimento | Criterio de clasificación.|
+| **indice_condicion_corporal** | Índice de condición corporal. | Continua |
+
+
+**a).** Formule una hipótesis para evaluar si el índice de condición difiere entre días de cultivo.
+
+```{r}
+#**H~0~**: $$ \mu_{15} = \mu_{30} = \mu_{45}$$
+
+#**H~1~**: Al menos una de las medias del indice corporal es diferente entre los días evaluados.
+```
+
+**b).** Importe el set de datos **Trucha.xlsx** usando la función **read_excel()** de la librería **readxl**, llame al objeto Trucha. Transformar en factor las variables Probiotico, Fuente y Tiempo_Dias con la función **as.factor()**. Explore el set de datos usando las funciones **head()**, **str()** y **summary()**.
+
+```{r, echo=FALSE}
+Trucha <- read_excel("Trucha.xlsx")
+Trucha$Probiotico <- as.factor(Trucha$Probiotico)
+Trucha$Fuente <- as.factor(Trucha$Fuente)
+Trucha$Tiempo_Dias <- as.factor(Trucha$Tiempo_Dias)
+head(Trucha)
+str(Trucha)
+summary(Trucha)
+```
+
+**c).** Realice un análisis exploratorio de datos de la variable bajo estudio. A partir del set de datos de elabore un histograma y un gráfico de cajas y bigotes para la variable indice_condicion_corporal. Use ggplot y coloque ambas gráficas en un panel.
+
+```{r, echo=FALSE}
+plot1 <- Trucha %>%
+          ggplot(aes(x= indice_condicion_corporal))+
+                geom_histogram(color="white", fill="black", position = "identity", bins = 15)+
+                theme(legend.position="none")+
+                labs(x="K",title="Distribución K")
+
+plot2 <- Trucha %>%
+          ggplot(aes(x=Tiempo_Dias,y=indice_condicion_corporal,fill=Tiempo_Dias))+
+                geom_boxplot()+
+                theme(legend.position="none")+
+                labs(x="Tiempo_Dias",y="Indice_condicion_corporal",title="Boxplot K por tiempo.")
+
+grid.arrange(plot1, plot2, ncol=2, nrow =1)
+```
+
+**d).** Calcule los estimadores puntuales de los promedios y las varianzas de la variable indice_condicion_corporal para cada nivel del factor Tiempo_Dias. Incluya tambien el N muestral. Use el paquete dplyr y los comandos **group_by()**, **summarise()**.
+
+
+```{r, echo=FALSE}
+Tabla1<- Trucha %>%
+              group_by(Tiempo_Dias) %>%
+summarize(N= n(), Mean = mean(indice_condicion_corporal),
+          Variance= var(indice_condicion_corporal))
+
+knitr::kable(Tabla1,caption ="Estimadores puntuales de media, varianza de indice de condición por tiempo.")
+
+```
+
+**e).** Realice el ajuste del siguiente modelo usando la función lm,(), donde los parámetros son los siguientes: variable respuesta indice_condicion_corporal y como factor de clasificación Tiempo_Dias, como set de datos (data=Trucha). Llame al objeto model2_anova1. Utilice el simbolo ~ para relacionar la variable respuesta con el factor de clasificación. Realice el anova() del objeto model2_anova1. 
+
+```{r, echo=FALSE}
+model2_anova1 <- aov(indice_condicion_corporal ~ Tiempo_Dias, data=Trucha)
+anova(model2_anova1)
+
+```
+
+Use la función pander::pander() para mostrar los resultados del modelo (model2_anova1), coloque en el parámetro caption un título a la tabla.
+
+
+```{r, echo=FALSE}
+pander::pander(model2_anova1, caption = "ANOVA a un criterio de clasificación.")
+```
+
+
+**f).** hacer la prueba a posteriori de Tukey sobre el objeto model2_anova1. Para esto use la función TukeyHSD(). LLame el objeto Tuk_model2_anova1.
+
+```{r, echo=FALSE}
+Tuk_model2_anova1 <- TukeyHSD(model2_anova1)
+Tuk_model2_anova1
+```
+
+**g).** Interprete los resultados.
+
+```{r}
+#El efecto Tiempo_Dias es estadísticamente significativo (p valor menor al nivel de significación del 5%). En consecuencia se rechaza la hipótesis nula. Por lo tanto, al menos existe un indice corporal promedio diferente en los días evaluados. Para estudiar a que son debidas esas diferencias se hizo una prueba de comparaciones a posteriori de Tukey y se obtuvo que las diferencias se presentaron entre los indices de condiciones corporales promedios de los días (30 y 15) y también entre (45 y 30). 
+```
+
+### **Ejercicio 5.** **Anova a dos criterios de clasificación y prueba a Posteriori Tukey**
+
+En este estudio de caso trabajaremos con un set de datos de Camarón blanco del Pacífico (*Litopenaeus vannamei*) en una estación de cultivo de México (n=120). Datos tomados del siguiente artículo [Gonzalez-Galaviza et al.,2020](https://www.tandfonline.com/doi/full/10.1080/1828051X.2020.1733444)
+
+Las variables de estudio se describen a continuación:
+
+|  **variable** | **Descripción**| **Tipo de efecto/variable**|
+|:-------------|:------------------| :------------------|
+| **ID_Camaron** | Identificador del camarón | Identificador.|
+| **Tank** | Tanques (10 camarones por tanque) | Criterio de clasificación .|
+| **Diet** | Se formularon dos dietas experimentales con diferente fuente proteica (vegetal y animal)  | Criterio de clasificación.|
+| **Genotype** | Dos genotipos evaluados, camarones de crecimiento rápido (FG) y alta resistencia (HR). | Criterio de clasificación. |
+| **Initial_Weight** | Peso inicial en gramos. | Continua. |
+
+
+**a).** Formule la hipótesis nula y alternativa para evaluar si el peso inicial es el mismo entre los camarones asignados a las diferentes dietas y estanques. Recuerde que en un experimento de este tipo, no deben haber grupos con mayor peso al inicio, pues esto invalida el resultado de crecimiento.
+
+```{r}
+#**H~0~**: $$\mu_{Animal_Tank1} = \mu_{Animal_Tank2} = \mu_{Animal_Tank3} = \mu_{Vegetal_Tank1} = \mu_{Vegetal_Tank2} = \mu_{Vegetal_Tank3}$$
+
+#**H~1~**: Al menos una de las medias del peso inicial es diferente para cada dieta en cada tanque.
+```
+
+**b).** Importe el set de datos **Camarones.xlsx** usando la función **read_excel()** de la librería **readxl**, llame al objeto Camarones. Transformar en factor las variables Tank, Diet y Genotype con la función **as.factor()**. Explore el set de datos usando las funciones **head()**, **str()** y **summary()**.
+
+```{r, echo=FALSE}
+Camarones <- read_excel("Camarones.xlsx")
+Camarones$Tank <- as.factor(Camarones$Tank)
+Camarones$Diet <- as.factor(Camarones$Diet)
+Camarones$Genotype <- as.factor(Camarones$Genotype)
+head(Camarones)
+str(Camarones)
+summary(Camarones)
+```
+
+**c).** Realice un análisis exploratorio de datos de la variable bajo estudio. A partir del set de datos de elabore un gráfico de cajas y bigotes para la variable **Initial_Weight**, como criterios de clasificación Diet y Tank y particionado por Tank use **facet_wrap(~ Tank)**.
+
+```{r, echo=FALSE}
+plot1 <- Camarones %>%
+          ggplot(aes(x= Initial_Weight))+
+                geom_histogram(color="white", fill="black", position = "identity", bins = 15)+
+                theme(legend.position="none")+
+                labs(x="K",title="Distribución Peso inicial")
+
+plot2  <- Camarones %>%
+                ggplot(aes(x= Diet,y=Initial_Weight,fill=Genotype))+
+                geom_boxplot()+
+                theme(legend.position="none")+
+                labs(x="Dieta",y="Peso Inicial (g)",title="Distribución Peso Inicial (g) por dieta y genotipo")+
+                facet_wrap(~ Genotype)
+
+grid.arrange(plot1, plot2, ncol=2, nrow =1)
+```
+
+**d).** Halle los estimadores puntuales de los promedios y las varianzas de la variable Initial_Weight para cada nivel del factor Diet y para cada nivel del factor Genotipo. Incluya tambien el N muestral. Use el paquete dplyr y los comandos **group_by()**, **summarise()**.
+
+```{r, echo=FALSE}
+
+Tabla_genotipo <- Camarones %>%
+                    group_by(Genotype) %>% 
+                  summarize(N=n(), media_IW_A_T1=mean(Initial_Weight),
+                          varianza_IW_A_T1= var(Initial_Weight))
+knitr::kable(Tabla_genotipo,caption ="Estimadores puntuales de media, varianza de peso inicial por genotipo.")
+
+
+
+```
+
+
+```{r, echo=FALSE}
+Tabla_Dieta  <- Camarones %>%
+                    group_by(Diet) %>% 
+                  summarize(N=n(), media_IW_A_T1=mean(Initial_Weight),
+                          varianza_IW_A_T1= var(Initial_Weight))
+
+knitr::kable(Tabla_Dieta,caption ="Estimadores puntuales de media, varianza de peso inicial por dieta.")
+```
+
+
+
+**e).** Realice el ajuste del siguiente modelo usando la función aov(), donde los parámetros son los siguientes: variable respuesta **Initial_Weight** y como factores de clasificación Diet y Tank, como set de datos (data=Camarones). Llame al objeto model3_anova1. Utlice el simbolo ~ para relacionar la variable respuesta con los factores de clasificación y su interacción. 
+
+```{r, echo=FALSE}
+model3_anova1 <- aov(Initial_Weight ~ Diet + Tank + Diet*Tank, data=Camarones)
+anova(model3_anova1)
+
+```
+
+Realice el anova() del objeto model3_anova1. Use la función pander::pander() para mostrar los resultados del modelo (model3_anova1), coloque en el parámetro caption un título a la tabla.
+```{r, echo=FALSE}
+pander::pander(model3_anova1, caption = "ANOVA a dos vías de clasificación usando la función aov().")
+```
+
+
+**f).** Interprete los resultados.
+
+```{r}
+#Los efectos Diet, Tank y la interacción Diet-Tank no son estadísticamente significativos (p valor mayor al nivel de significación del 5%). En consecuencia no hay evidencia para rechazar la hipótesis nula. Por lo tanto, no existen diferencias entre las pesos iniciales promedio para las dietas Animal y Vegetal en los 3 Tanques.
+```
+
