@@ -406,22 +406,14 @@ summary(mod_nulo)$coef %>% kable()
 ```
 
 
-# **COMPARACIÓN DE MODELOS AIC**
+# **COMPARACIÓN DE MODELOS AIC Y BIC**
 
 ```{r, echo=TRUE}
 AIC(mod_nulo,mod_logit,mod_logit_mult)%>% kable()
+
+BIC(mod_nulo,mod_logit,mod_logit_mult)%>% kable()
 ```
 
-# **ANOVA PARA CADA MODELO**
-
-```{r}
-anova(mod_nulo, test ='Chisq')%>% kable()
-
-anova(mod_logit, test ='Chisq')%>% kable()
-
-anova(mod_logit_mult, test ='Chisq')%>% kable()
-
-```
 
 # **COMPARACIÓN DE MODELOS (ANOVA)**
 
