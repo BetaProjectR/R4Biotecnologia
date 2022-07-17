@@ -1,0 +1,186 @@
+---
+title: "Guía Análisis de Componentes Principales"
+subtitle: 'DBT 845 - Investigación reproducible y análisis de datos biotecnológicos con R.'
+author:
+ name: Dr. José A. Gallardo y Dra. María Angélica Rueda.
+ affiliation: Pontificia Universidad Católica de Valparaíso
+ email: <jose.gallardo@pucv.cl>
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    code_folding: hide
+  word_document: default
+  pdf_document: default
+---
+
+#### Objetivos de aprendizaje
+
+Elaborar análisis de componentes principales con el
+ **software R**.
+  
+#### Conceptos importantes
+
+**Análisis de componentes principales**  
+Los análisis de componentes principales (en español ACP, en inglés, PCA) son una técnica utilizada para describir un conjunto de datos en términos de nuevas variables («componentes») no correlacionadas. Los componentes se ordenan por la cantidad de varianza original que describen, por lo que la técnica es útil para reducir la dimensionalidad de un conjunto de datos [Wiki.](https://es.wikipedia.org/wiki/An%C3%A1lisis_de_componentes_principales).
+
+**Análisis de componentes principales**  
+Es una herramienta utilizada para realizar análisis exploratorio de datos multivariantes y para construir modelos predictivos.
+
+Permite reducir la dimensionalidad y encontrar patrones en un set de datos mediante el calculo de los “componentes principales”.
+
+Los componentes principales se ordenan por la cantidad de varianza original que describen [Wiki.](https://es.wikipedia.org/wiki/An%C3%A1lisis_de_componentes_principales).
+
+#### Software.
+
+Esta es la versión de R que se usó para crear esta guía.
+```{r, echo=TRUE}
+R.version.string
+```
+
+#### Librerías.
+  
+**{stats}**  
+This package contains functions for statistical calculations and random number generation.
+
+**{readxl}**  
+Read Excel Files.
+  
+**{dplyr}**  
+Librería para manipular datos.
+
+**{psych}**  
+Procedures for Psychological, Psychometric, and Personality
+Research
+
+**{factoextra}**  
+Extract and Visualize the Results of Multivariate Data Analyses.
+
+
+### EJERCICIOS
+
+Realice los ejercicios de forma colaborativa con uno o dos compañeros.
+
+Elabore un archivo Rmarkdown o file con extensión **.Rmd** en Rstudio o Rstudio.cloud y configurelo para exportar el resultado como un documento dinámico **pdf**. 
+
+En el primer bloque de códigos o **chunk** configure los comandos de la siguiente manera *knitr::opts_chunk$set(echo = TRUE)* y habilite las librerías **stats**, **readxl**, **dplyr**, **ggplot2**, **psych**, **vegan** y **factoextra** usando la función library().
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(stats)
+library(readxl)
+library(dplyr)
+library(psych)
+library(factoextra)
+library(ggplot2)
+library(vegan)
+```
+
+### ESTUDIO DE CASO: Tratamiento de vaginosis bacteriana (VB)
+La vaginosis bacteriana (VB) es una enfermedad multifactorial prevalente en mujeres de
+edad reproductiva caracterizada por un cambio de la comunidad microbiana vaginal dominada por la especie Lactobacillus hacia una comunidad anaeróbica taxonómicamente diversa. El metronidazol es un agente quimioterapéutico ampliamente utilizado para tratar infecciones causadas por bacterias anaerobias, sin embargo, por razones aun desconocidas algunas mujeres no responden a la terapia. 
+
+A partir del set de datos **VB_PCA_subaset.xlsx** disponibles en el articulo "Metatranscriptome analysis of the vaginal microbiota reveals potential mechanisms for protection against metronidazole in bacterial
+vaginosis."  de los autores [Deng y colaboradores, 2018](https://doi.org/10.1128/mSphereDirect.00262-18.) realice un análisis de componentes principales.
+
+### **Ejercicio 1.** Importar y explorar
+
+a) Importe la hoja 1 y la hoja 2 del set de datos **VB_PCA_subaset.xlsx** usando la función *read_excel()* de la librería *readxl*. No olvide usar el argumento *Sheet=1* y *Sheet=1*. Explore el set de datos usando las funciones *summary()*. La hoja uno contiene la metadata de las muestras y la hoja 2 los datos de diversidad microbiana estimada del conteo de read de secuenciación del gen 16S. 
+
+Compruebe que todas las variables numéricas están expresadas como número en la hoja 2 y que las variables *sample*, *BV_state* y *Metronidazole_reaction* sean factores. Caso contrario realice los cambios correspondientes con las funciones **as.numeric()** y **as.factor()**. 
+
+
+```{r}
+metadata <- read_excel("BV_PCA_subset.xlsx", sheet = 1)
+microbiota <- read_excel("BV_PCA_subset.xlsx", sheet = 2)
+
+metadata$sample <- as.factor(metadata$sample)
+metadata$BV_state <- as.factor(metadata$BV_state)
+metadata$Metronidazole_reaction <- as.factor(metadata$Metronidazole_reaction)
+microbiota$sample <- as.factor(microbiota$sample)
+
+summary(metadata)
+
+```
+
+¿Cuántas pacientes responden al tratamiento Metronidazole_reaction = positive?
+¿Cuántas pacientes no se recuperan de Metronidazole_reaction = negative?
+
+```{r}
+table(metadata$Metronidazole_reaction)
+table(metadata$BV_state)
+```
+
+
+b) Elabore una gráfica de correlaciones entre las bacterias del genero Lactobacillus (columnas 46-56) usando la función **pairs.panels()**. Recomendación: grafique de a 4-5 especies por panel, recuerde que los datos son conteos, por lo que NO es recomendable usar correlación de pearson.
+
+```{r, echo=TRUE}
+pairs.panels(microbiota[46:50], method="spearman")
+pairs.panels(microbiota[51:56], method="spearman")
+```
+
+c) Elabore una matriz de correlaciones no paramétrica de spearman para la diversidad de bacterias del genero Enterococcus, Eremococcus y Escherichia (34-37), use el comando **cor()**.
+
+```{r}
+cor(microbiota[34:37], method = "spearman")
+```
+
+
+d) Calcule el índice de disimilaridad de Bray-Curtis entre las muestras del estudio usando la función vegdist() de la librería vegan. 
+
+```{r, echo=TRUE}
+Bray_curtis <- vegdist(microbiota[2:104], method="bray", binary=FALSE, diag=TRUE, upper=FALSE, na.rm = FALSE)
+Bray_curtis
+```
+
+
+
+### **Ejercicio 2.** Análisis de Componentes Principales
+
+a) Realice un análisis de componentes principales para el set de datos de microbiota con la función **prcomp**, use los argumento *scale = TRUE* para estandarizar las variables de forma automática. Almacene el ACP en un nuevo objeto denominado **microbiota_PCA**. Recomendación: recuerde que el PCA se debe hacer sobre un set de datos que solo contenga las abundancia de microbiota, incluya el nombre de las muestra en las filas y no como una columna.
+
+```{r}
+microbiota_new <- microbiota[2:104]
+rownames(microbiota_new) <- microbiota$sample
+microbiota_PCA <- prcomp(microbiota_new, scale = TRUE)
+microbiota_PCA[["x"]]
+```
+
+c) Usando el objeto **microbiota_PCA**, obtenga la varianza explicada por cada CP con la función **get_eigenvalue()** y grafique con la función **fviz_eig()**.
+
+```{r}
+get_eigenvalue(microbiota_PCA)
+fviz_eig(microbiota_PCA)
+
+```
+
+d) Elabore diferentes gráficas para representar la distribución de los sitios **fviz_pca_ind()**, de las variables **fviz_pca_var()** y gráficas Biplot de individuos y variables **fviz_pca_biplot()**. Use los argumentos aprendidos en clase para mejorar la visualización de individuos y variables.
+
+```{r}
+fviz_pca_ind(microbiota_PCA,
+             label = "none", # hide individual labels
+             habillage = metadata$BV_state, # color by groups
+             palette = c("#00AFBB", "#E7B800"),
+             addEllipses = TRUE, # Concentration ellipses
+             repel = TRUE) # evita que se solape el nombre de los sitios
+```
+
+
+```{r}
+fviz_pca_var(microbiota_PCA, select.var=list(name = c("Lactobacillus iners","Lactobacillus crispatus", "Gardnerella vaginalis", "Atopobium vaginae")))
+```
+
+
+```{r}
+fviz_pca_biplot(microbiota_PCA, 
+                select.var=list(name = c("Lactobacillus iners","Lactobacillus crispatus", "Gardnerella vaginalis", "Atopobium vaginae")),              
+                label ="var",
+                habillage = metadata$BV_state, # color by groups
+                palette = c("#00AFBB", "#E7B800"),
+                addEllipses = TRUE, # Concentration ellipse
+                ellipse.level=0.80,
+                repel = TRUE) # evita que se solape el nombre de los sitios
+```
+
