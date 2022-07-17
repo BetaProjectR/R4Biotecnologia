@@ -1,0 +1,349 @@
+---
+title: "Guía estadística no paramétrica"
+subtitle: 'DBT 845 - Investigación reproducible y análisis de datos biotecnológicos con R.'
+author:
+ name: Dr. José A. Gallardo y Dra. María Angélica Rueda.
+ affiliation: Pontificia Universidad Católica de Valparaíso
+ email: <jose.gallardo@pucv.cl>
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    code_folding: hide
+  word_document: default
+  pdf_document: default
+---
+
+<style>
+#TOC {
+  color: black;
+  font-familiy: Calibri;
+  font-size: 14px;
+  border-color: #708090; 
+}
+body {
+   color: black;
+   font-familiy: Calibri;
+}
+
+pre {
+  color: black;
+  background-color: #F8F8FF;
+}
+# header {
+  color: #800000;
+  font-familiy: Calibri;
+  background-color: #F5F5F5;
+  opacity: 0.8;
+  font-size: 16px;
+}
+</style>
+
+
+#### **Introducción**
+
+**¿Qué son las pruebas no paramétricas?**
+
+Conjunto diverso de pruebas estadísticas.
+
+Usualmente no tienen supuestos acerca de la distribución de la variable, alternativamente se conocen como métodos de distribución libre.
+
+El concepto de “no paramétrico” a veces es confuso, pues los métodos no paramétricos si estiman y someten a prueban hipótesis usando parámetros, pero no los de distribución normal.
+
+Se aplican usualmente para variables cuantitativas que no cumplen con el supuesto de normalidad y para variables cualitativas.
+
+El concepto matemático de permutación está subyacente a muchos métodos de análisis no paramétricos. 
+
+**Prueba de correlación no paramétrica**  
+Las pruebas de correlación no paramétricos se usan cuando no se cumplen los supuestos del análisis de correlacion paramétrico de pearson:
+
+Supuestos:
+Las variables X e Y son continuas.
+Existe relación lineal.
+La distribución conjunta de (X, Y) es una distribución Bivariable normal.
+
+**Tablas de contingencia y pruebas Chi cuadrado**  
+Las tablas de contingencia se usan comúnmente para resumir datos de variables categóricas (ej. Cualitativas, dicotómicas). Las pruebas no paramétricas de Chi cuadrado se usan investigar la asociación de dos o más variables categóricas una de las cuales es una variable respuesta y otra es una variable predictora.
+
+**Prueba de Wilkoxon**  
+La prueba de Wilcoxon es una prueba no paramétrica que permite comparar dos muestras, usualmente denominada de Mann-Whitney, y determinar si existen diferencias entre ellas. Se utiliza cuando no se puede suponer la normalidad de dichas muestras. Las muestras pueden ser independientes, pareadas o repetidas.
+
+**Prueba de Kurskal Wallis**  
+La prueba de Kruskal-Wallis es un método no paramétrico que permite evaluar si multiples muesttras independientes provienen de una población común. Comúnmente se utiliza esta prueba como alternativa a un ANOVA cuando los datos no tienen una distribución normal.
+
+#### **Objetivos de aprendizaje**
+
+Los objetivos de aprendizaje de esta guía son:
+
+**1**. - Realizar pruebas no paramétricas.
+
+**2**. - Realizar gráficas avanzadas con ggplot2. 
+
+**3**. - Elaborar un reporte dinámico en formato html con **[Rmarkdown](https://rmarkdown.rstudio.com/)**.
+
+
+#### Librerías.
+  
+**{readxl}**  
+
+**{stats}**
+  
+#### Comandos para realizar los análisis.
+
+1.- Importa datos en formato excel
+**read_excel()**  
+
+2.- Crea tablas en formato data frame.
+**data.frame()**  
+
+3.- Agrega nombre a las columnas d eun data.frame
+**colnames()**  
+
+4.- Test de correlación  
+**cor.test()**
+
+5.- Prueba de chi cuadrado   
+***chisq.test()***
+
+6.- Prueba de wilkoxon
+**wilcox.test()**  
+
+7.- Prueba de Kruskal wallis
+**kruskal.test()**  
+
+#### EJERCICIOS
+
+### **Ejercicio 1.** Elaborar archivo Rmarkdown.
+
+Usando lo aprendido en el curso elabore y configure un archivo o file con extensión **.Rmd** y configurelo para exportar el resultado como un documento dinámico **html**.
+
+Utilice el siguiente ejemplo para completar la información de metadatos: Título: Reporte inferencia estadística, nombre del autor: Su nombre.
+
+Luego guarde inmediatamente su *script* como **script_16_nombre_apellido.Rmd**. Al finalizar la actividad deberá exportar y almacenar este script en su carpeta drive de tareas.
+
+### **Ejercicio 2.** Configuración del reporte.
+
+En el primer bloque de códigos o **chunk** configure los comandos de la siguiente manera **_knitr::opts_chunk$set(echo = TRUE)_** y cargue las librerías  **readxl**, **stats**, **ggplot2** y **FSA**.
+
+```{r setup, include=TRUE, warning=FALSE,message=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(readxl)
+library(stats)
+library(ggplot2)
+library(FSA)
+
+```
+
+Ejecute cada uno de los siguientes ejercicios en uno o más bloques de códigos diferentes. Sea ordenado y documente su reporte adecuadamente.
+
+### **Ejercicio 3.** Prueba de correlación.
+
+En el siguiente experimento se desea evaluar si el tamaño de los peces puede asociarse de forma positiva o negativa con el número de parásitos.
+
+```{r, echo=FALSE}
+fish_size <- c(942,101,313,800)
+parasites <- c(13,14,18,10)
+
+dat <- data.frame(fish_size, parasites)
+  
+knitr::kable(dat, col.names=c("Tamaño (g)","Nº Parásitos"), caption = "Tabla 1. Tamaño de los peces y número de parásitos")
+
+```
+
+a) Escriba su hipótesis nula y alternativa para este experimento.
+
+```{r}
+
+# H0 : El tamaño de los peces y el número de parásitos son mutuamente independientes. 
+# H1 : El tamaño de los peces y el número de parásitos no son mutuamente independientes. 
+
+```
+
+b) Cree un data.frame con las columnas Fish size (x) e Parásitos (y).
+
+```{r}
+# Crea objetos X e Y 
+X <- c(942,101,313,800)
+Y <- c(13,14,18,10)
+
+Parasitos <- data.frame(X,Y)
+colnames(Parasitos) <- c("Fish size", "Parasitos")
+Parasitos
+class(Parasitos)
+```
+
+c) Ponga a prueba su hipótesis usando el test de correlación de spearman usando la función **cor.test()**, no olvide seleccionar en el argumento *alternative=""* para indicar que hipótesis evaluará *"two.sided"*, *"less"*, *"greater"*.
+
+```{r}
+# Realiza test de correlación
+cor.test(Parasitos$`Fish size`,Parasitos$Parasitos, method = "spearman", alternative = "two.sided")
+```
+
+
+d) Interprete sus resultados.
+
+### **Ejercicio 4.** Tabla de contingencia.
+
+En el siguiente experimento se desea evaluar si existe asociación entre los genotipos de un pez y la resistencia a una enfermedad bacteriana.
+
+```{r echo=FALSE}
+
+enfermedad=factor(c(rep(0,150),rep(1,20),rep(0,40),rep(1,10)),
+               labels=c("control","caso"))
+genotipo=factor(c(rep("AA/Aa",170),rep("aa",50)),
+                levels=c("AA/Aa","aa"))
+
+tab <- table(genotipo,enfermedad)
+tab
+
+```
+
+a) Escriba su hipótesis nula y alternativa para este experimento.
+
+```{r}
+# H0 : El genotipo de los peces y la resistencia a la enfermedad son independientes. 
+# H1 : El genotipo de los peces y la resistencia a la enfermedad NO son independientes.
+```
+
+b) Elabore una matriz de 2x2 con los datos del experimento. No es necesario que incluya los nombres de filas y columnas.
+
+```{r}
+
+# Crea un vector con los datos
+datos <- c(150, 40, 20, 10)
+
+# Transforma el vector de datos a una matriz
+dim(datos) <- c(2,2)
+
+datos
+class(datos)
+```
+
+c) Ponga a prueba su hipótesis usando el test de chi cuadrado usando la función **chisq.test()**. 
+
+```{r}
+
+# Test de Chi-squared en R (chisq.test)
+chisq.test(datos)
+
+```
+
+d) Interprete sus resultados.
+
+
+### **Ejercicio 5.** Comparación de muestra pareadas.
+
+En el siguiente experimento se desea evaluar si dos sensores de temperatura colocados a ambos extremos de un biorreactor marcan la misma temperatura. Se sugiere aplicar el test de wilcoxon para muestras pareadas en atención a que ambos grupos provienen de la misma piscina y de los mismos días.
+
+```{r, fig.cap="Temperatura de dos sensores en un biorreactor"}
+tem <- read_excel("temperatura.xlsx", sheet = 2)
+ggplot(tem, aes(x=Dia, y=Temperatura, group=Clasificación)) +
+  geom_line(aes(linetype=Clasificación))+
+  geom_point(aes(shape=Clasificación))
+
+```
+
+a) Escriba su hipótesis nula y alternativa para este experimento.
+
+```{r}
+
+# H0 : La temperatura de ambos sensores NO es distinta.
+# HA : La temperatura de ambos sensores es distinta.
+
+```
+
+b) Importe la hoja 1 set de datos **temperatura** usando la función *read_excel()* de la librería *readxl*. No olvide usar el argumento *Sheet=1*. Explore el set de datos usando las funciones *summary()* y *str()*.
+
+```{r}
+temperatura <- read_excel("temperatura.xlsx", sheet = 1)
+summary(temperatura)
+str(temperatura)
+```
+
+c) Ponga a prueba su hipótesis usando el test de wilcoxon usando la función **wilcox.test()**, no olvide seleccionar en el argumento *alternative=""* para indicar que hipótesis evaluará *"two.sided"*, *"less"*, *"greater"*.
+
+```{r}
+# no es necesario indicar muestras pareadas pues estamos haciendo la resta en la función.
+wilcox.test(temperatura$Sensor_1 - temperatura$Senson_2, alternative = "two.sided")
+```
+
+c) Interprete sus resultados.
+
+
+### **Ejercicio 6.** Comparación de múltiples muestras independientes.
+
+En el siguiente experimento se desea evaluar el efecto de 3 diferentes medios de cultivo (NUTRI: Nutrilake; GUILL Guillard; MONO: Monoammonuim Phosphate) sobre el tiempo medio generacional de la microalga *Haematococcus pluvialis*, la que se utiliza para producir Axtasantina, un poderoso antioxidante.
+
+
+```{r, echo=FALSE}
+g1 <- c(27, 26, 27, 28) # NUTRI
+g2 <- c(25, 26, 28, 24) # GUILL
+g3 <- c(24, 23, 22, 22) # MONO
+
+fito <- data.frame(g1, g2, g3)
+  
+colnames(fito) <- c("NUTRI", "GUILL","MONO")
+
+knitr::kable(fito, col.names=c("NUTRI", "GUILL","MONO"), caption = "Tabla. Tiempo generacional de Chaetoceros muelleri alimentada con 3 medios diferentes de cultivo.")
+```
+
+a) Escriba su hipótesis nula y alternativa para este experimento.
+
+```{r}
+
+# H0 : El Tiempo generacional de Haematococcus pluvialis no es diferente entre 3 medios cultivo: NUTRI, GUILL, MONO.
+# HA :  El Tiempo generacional de Haematococcus pluvialis es diferente entre 3 medios cultivo: NUTRI, GUILL, MONO.
+
+```
+
+b) Elabore tres vectores con la concentración de *Haematococcus pluvialis* y luego realice un test de kruskal-wallis para evaluar su hipótesis.
+
+```{r}
+Nutri <- c(27, 26, 27, 28) # NUTRI
+Guill <- c(25, 26, 28, 24) # GUILL
+Mono <- c(24, 23, 22, 22) # MONO
+
+
+kruskal.test(list(Nutri, Guill, Mono))
+
+```
+
+c) Identifique que grupos son diferentes haciendo una prueba de comparaciones multiples de Dunn usando el comando **dunnTes**. 
+
+Elabore primero un data.frame (opcion principiantes)
+```{r}
+Axta <- data.frame(micro=c("NUTRI","NUTRI","NUTRI","NUTRI","GUILL","GUILL","GUILL","GUILL","MONO","MONO","MONO","MONO"), growth=c(27, 26, 27, 28,25, 26, 28, 24,24, 23, 22, 22))
+head(Axta)
+```
+
+Elabore primero un data.frame (opcion pro)
+```{r}
+micro<-c(Nutri,Guill,Mono)
+growth<- factor(rep(1:3, c(4, 4, 4)),
+labels = c("Nutri",
+"Guill",
+"Mono"))
+dunnTest(micro,growth)
+
+```
+
+
+
+```{r}
+Axta %>% 
+  ggplot(aes(x=micro,y=growth,fill=micro))+
+      geom_boxplot()+
+     theme(legend.position="none")+
+     labs(x="Tipo de cultivo",y="Crecimiento",title="DBoxplot crecimiento en función del tipo de cultivo")
+```
+
+
+```{r}
+dunnTest(growth~micro,data=Axta, method="by")
+```
+
+
+d) Interprete sus resultados.
