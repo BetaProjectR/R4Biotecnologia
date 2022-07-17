@@ -1,0 +1,251 @@
+---
+title: "Guía Introducción Análisis Multivariado"
+subtitle: 'DBT 845 - Investigación reproducible y análisis de datos biotecnológicos con R.'
+author:
+ name: Dr. José A. Gallardo y Dra. María Angélica Rueda.
+ affiliation: Pontificia Universidad Católica de Valparaíso
+ email: <jose.gallardo@pucv.cl>
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    code_folding: hide
+  word_document: default
+  pdf_document: default
+---
+
+<style>
+#TOC {
+  color: black;
+  font-familiy: Calibri;
+  font-size: 14px;
+  border-color: #708090; 
+}
+body {
+   color: black;
+   font-familiy: Calibri;
+}
+
+pre {
+  color: black;
+  background-color: #F8F8FF;
+}
+# header {
+  color: #800000;
+  font-familiy: Calibri;
+  background-color: #F5F5F5;
+  opacity: 0.8;
+  font-size: 16px;
+}
+</style>
+---
+
+### Introducción
+
+La estadística  multivariada es una rama de las estadísticas que abarca la observación y el análisis simultáneo de más de una variable respuesta. La aplicación de la estadística multivariada es llamada también [Análisis multivariante](https://es.wikipedia.org/wiki/Estad%C3%ADstica_multivariante).
+
+Los análisis multivariadoss son muy utilizados en Acuicultura como herramienta para realizar análisis exploratorio de datos y detectar variables latentes.
+
+**Matriz de distancia o similaridad**  
+Subyacente a muchos de los análisis multivariantes está el uso de matrices de distancia o similaridad por lo que su calculo y adecuada interpretación es fundamental previo a la realización de los análisis multivariantes. 
+
+Una matriz de distancias es una matriz cuyos elementos representan las distancias entre los puntos, tomados por pares, de un conjunto. Se trata, por lo tanto, de una matriz simétrica de tamaño NxN.
+
+**Matriz de distancia euclideana**  
+La distancia euclidiana, es la distancia entre dos puntos de un espacio euclídeo, la cual se deduce a partir del teorema de Pitágoras [Wiki.](https://es.wikipedia.org/wiki/Distancia_euclidiana)
+
+**¿Qué son los análisis de cluster o agrupamiento?**
+Son herramientas de exploración de datos que permiten agrupar y visualizar datos multivariados con base a su similitud, , en grupos o conjuntos de manera que los miembros del mismo grupo tengan características similares [Wiki](https://es.wikipedia.org/wiki/An%C3%A1lisis_de_grupos)
+
+**Clasificación de los análisis de cluster**
+
+**Jerárquico:** Los grupos se fusionan sucesivamente siguiendo una jerarquía de homogeneidad, la cual decrece a medida que se agregan más elementos al grupo. 
+
+**No jerárquico:** Se forman grupos homogéneos sin establecer relaciones o jerarquía  entre ellos.
+
+#### Software
+
+Esta es la versión de R que se usó para crear esta guía.
+```{r, echo=TRUE}
+R.version.string
+```
+
+#### Librerías.
+  
+**{stats}**    
+This package contains functions for statistical calculations and random number generation.
+
+**{readxl}**  
+Read Excel Files.
+  
+**{dplyr}**  
+Librería para manipular datos.
+
+**{vegan}**  
+Librería que implementa métodos de ordenación y diversidad ecológica.
+
+**{cluster}**  
+Librería que implementa algoritmos para el análisis de cluster
+
+**{factoextra}**  
+Librería que implementa algoritmos para el análisis de cluster y visualización usando ggplot2
+
+#### Comandos para realizar los análisis.
+
+**read_excel()**    
+Importa datos a R desde archivos excel.
+
+**t()**  
+Dada una matriz x, t() entrega la transpuesta x. 
+
+**sqrt()**  
+Transforma datos con raiz cuadrada.
+
+**dist()**  
+Calcula diferentes matrices de distancia entre las filas de un conjunto de datos.
+
+**vegdist()**  
+Calcula diferentes medidas de distancia o similaridad (usualmente para datos de ecología) entre las filas de un conjunto de datos.
+
+**hclust()**  
+Realiza análisis de cluster jerarquico sobre una matriz de disimilaridad.
+
+**scale()**  
+Función para escalar y centrar variables, util para los análisis de cluster.
+
+**get_dist()**  
+Calcula matrices de distancia entre filas de una matriz de datos.
+
+**fviz_dist()**  
+Visualiza una matriz de distancia.
+
+**fviz_cluster()**  
+Visualiza resultados de análisis de cluster
+
+**fviz_nbclust()**  
+Determina y viasualiza número de cluster óptimos.
+
+#### Objetivos de aprendizaje
+
+Calcular matriz de distancia de variables discretas y realizar análisis de cluster con **software R**.
+
+#### EJERCICIOS
+
+Realice los ejercicios de forma colaborativa con uno o dos compañeros.
+
+Elabore un archivo Rmarkdown o file con extensión **.Rmd** en Rstudio o Rstudio.cloud y configurelo para exportar el resultado como un documento dinámico **pdf**. 
+
+En el primer bloque de códigos o **chunk** configure los comandos de la siguiente manera *knitr::opts_chunk$set(echo = TRUE)* y habilite las librerías **stats**,  **readxl**, **dplyr**, **vegan**, **psych**, **cluster** y **factoextra** usando la función library().
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(stats)
+library(readxl)
+library(dplyr)
+library(vegan)
+library(psych)
+library(cluster)
+library(factoextra)
+```
+
+### ESTUDIO DE CASO 1: Matriz de distancia y análisis de cluster para datos discretos de diversidad ambiental.
+
+### **Ejercicio 1.** Importar y explorar datos de biodiversidad ambiental.
+
+A partir del set de datos **bioenv.xlsx** disponibles en el libro MULTIVARIATE ANALYSIS OF ECOLOGICAL DATA de los autores [Michael Greenacre and Raul Primicerio](https://www.fbbva.es/microsite/multivariate-statistics/) realice los siguientes ejercicios.
+
+a) Importe la hoja 1 set de datos **bioenv.xlsx** usando la función *read_excel()* de la librería *readxl*. No olvide usar el argumento *Sheet=1*. Explore el set de datos usando las funciones *summary()*. Compruebe que todas las variables numéricas están expresadas como número y que las variables Sitio y Sediment sean factores. Caso contrario realice los cambios correspondientes con las funciones **as.numeric()** y **as.factor()**.
+
+```{r}
+bioenv <- read_excel("bioenv.xlsx", sheet = 1)
+summary(bioenv)
+bioenv$Sitio <- as.factor(bioenv$Sitio)
+bioenv$Sediment <- as.factor(bioenv$Sediment)
+str(bioenv)
+```
+
+b) Elabore una matriz de correlaciones no paramétrica de spearman **cor()** para los sitios s1 a s7 usando la información de abundancia de especies (a,b,c,d y e).
+
+Sugerencia: Transponga el set de datos **bioenv** solo para las columnas ([2:6]). Si desea incluya el nombre de las filas y las columnas a esta nueva matriz.
+
+```{r}
+t_bioenv <- t(bioenv[2:6])
+colnames(t_bioenv) <- c("s1",	"s2",	"s3",	"s4",	"s5",	"s6",	"s7",	"s8",	"s9",	"s10",	"s11",	"s12",	"s13",	"s14",	"s15",	"s16",	"s17",	"s18",	"s19",	"s20",	"s21",	"s22",	"s23",	"s24",	"s25",	"s26",	"s27",	"s28",	"s29",	"s30")
+rownames(t_bioenv) <- c("a","b","c","d","e")
+res <- cor(t_bioenv, method = "spearman")
+round(res[c(1:7),c(1:7)], 2)
+```
+
+c) Calcule el índice de disimilaridad de Bray-Curtis usando la función **vegdist()** de la librería **vegan**. 
+
+Compare con la correlación estimada anteriormente.
+
+```{r}
+
+Bray_curtis <- vegdist(bioenv[2:6], method="bray", binary=FALSE, diag=FALSE, upper=FALSE, na.rm = FALSE)
+Bray_curtis
+```
+
+### **Ejercicio 2.** Cluster jerárquico para datos de biodiversidad ambiental.
+
+a) Elabore una gráfica de cluster jerarquico usando la función **hclust()**. Considere el método UPGMA usando el argumento *method="average"*. Grafique el dendograma con la función **plot()**. 
+
+Use el argumento *hang=-1* para mejorar el diseño del cluster.
+Use abline para agregar una linea horizontal en un indice de similaridad de 0.5. ¿Cuántos grupos observa?
+```{r}
+fit <- hclust(Bray_curtis, method="average")
+plot(fit, hang=-1)
+abline(h = 0.5, col="red")
+```
+
+
+### **Ejercicio 3.** Cluster no jerárquico para datos de biodiversidad ambiental.
+
+Ahora realizaremos un análisis de cluster no jerarquico con el método k-means y usaremos nuevas funciones para realizar un proceso de estandarización previo al clustering.
+
+a) Para las tres variables cuantitativas continuas S, H y J estandarice las variables usando la función **scale()**.
+
+```{r}
+bioenv_scaled <- scale(bioenv[2:6])
+```
+
+b) Elabore y grafique una matriz de distancia de *manhattan* con las funciones **get_dist()** y **fviz_dist()** de la librería **factoextra**
+
+```{r}
+distance <- get_dist(bioenv_scaled, method = "manhattan")
+fviz_dist(distance)
+```
+
+c) Realice un análisis de cluster k-means con la función **kmeans** de la librería **stats**. Suponga la existencia de 2, 3 y 4 cluster diferentes con el argumento *centers*, incluya el argumento *nstart = 25*. Guarde cada análisis en tres objetos diferentes llamados k2, k4 y k6 y luego grafique cada objeto con la función **fviz_cluster()** de la librería **factoextra**. 
+
+```{r}
+k2 <- kmeans(bioenv_scaled, centers = 2, nstart = 25)
+fviz_cluster(k2, data = bioenv_scaled)
+
+k3 <- kmeans(bioenv_scaled, centers = 4, nstart = 25)
+fviz_cluster(k3, data = bioenv_scaled)
+
+k4 <- kmeans(bioenv_scaled, centers = 6, nstart = 25)
+fviz_cluster(k4, data = bioenv_scaled)
+```
+
+d) Note que el análisis de cluster por k-means no nos dice nada acerca de cual es el numero óptimo de cluster y todos, excepto k=6, parecen dar una buena representación de los datos. 
+
+Para solucionar este problema la función **fviz_nbclust()** permite determinar y visualizar el número óptimo de cluster mediante el argumento *method*. En cada caso use el argumento *kmeans* y las variables estandarizadas.
+
+**method="wss"**
+Calcula la suma de cuadrados total dentro de cluster (total within-cluster sum of square, wss). Usualmente, el "codo" de la curva se considera un buen indicador del número de grupos. En este caso, el codo se observa en k=2, pero quizas también en k=4. 
+```{r}
+fviz_nbclust(bioenv_scaled, kmeans, method = "wss")
+```
+
+**method = "silhouette"**
+Este método calcula un coeficiente o **silueta** que va de -1 a +1, donde un valor alto indica que el objeto está bien emparejado con su propio grupo y mal emparejado con los grupos vecinos. En este caso, y al igual que el caso anterior el mayor valor de coeficiente silueta se obtiene con k=2. 
+
+```{r}
+fviz_nbclust(bioenv_scaled, kmeans, method = "silhouette")
+```
+
+
