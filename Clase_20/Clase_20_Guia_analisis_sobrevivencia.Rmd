@@ -1,0 +1,227 @@
+---
+title: "Guía análisis de sobrevivencia"
+subtitle: 'DBT 845 - Investigación reproducible y análisis de datos biotecnológicos con R.'
+author:
+ name: Dr. José A. Gallardo y Dra. María Angélica Rueda.
+ affiliation: Pontificia Universidad Católica de Valparaíso
+ email: <jose.gallardo@pucv.cl>
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    code_folding: hide
+  word_document: default
+  pdf_document: default
+---
+
+<style>
+#TOC {
+  color: black;
+  font-familiy: Calibri;
+  font-size: 14px;
+  border-color: #708090; 
+}
+body {
+   color: black;
+   font-familiy: Calibri;
+}
+
+pre {
+  color: black;
+  background-color: #F8F8FF;
+}
+# header {
+  color: #800000;
+  font-familiy: Calibri;
+  background-color: #F5F5F5;
+  opacity: 0.8;
+  font-size: 16px;
+}
+</style>
+
+## Introducción
+
+Los análisis de sobrevivencia son un conjunto de herramientas estadísticas *No paramétricas* utilizadas para analizar la probabilidad de que un evento (muerte) ocurra en un determinado tiempo.
+
+**Conceptos importantes** 
+Tiempo de supervivencia/falla (variable respuesta): Tiempo entre que se incorpora una observación al estudio y la fecha en la que ocurre el evento en esa observación.
+
+Observaciones censuradas: Observaciones en las que no ha ocurrido el evento o aquellas en las que se pierde el registro del individuo o falla por razones diferentes a las investigadas.
+
+**Método de Kaplan-Meier**  
+Método no paramétrico que estima las probabilidades de supervivencia (S) en los diferentes tiempos (t) en los que ha ocurrido el evento.
+
+$$\hat{S(t)} = \prod_{t<t1}\ \frac{n_i-d_i}{n_i}$$
+
+$d_i$, el número de muertes en el momento $t_i$  
+$n_i$, el número de sujetos en riesgo justo antes de $t_i$. 
+
+**Test estadístico no paramétrico Log rank test**.  
+
+$G = 2 \sum_{i}\ O_i ln \frac{O_i}{E_i}$
+
+**Hipótesis**  
+**H~0~**: No existen diferencias entre los grupos en la probabilidad de que ocurra un evento (muerte) en ningún tiempo.  
+**H~1~**: Existen diferencias entre los grupos en la probabilidad de que ocurra un evento (muerte) en algún tiempo.
+
+Referencia: [The log rank test](https://www.bmj.com/content/328/7447/1073.long)  
+
+## **Objetivos de aprendizaje**
+
+Los objetivos de aprendizaje de esta guía son:
+
+**1**. - Realizar pruebas paramétricas de análisis de sobrevivencia.
+
+**2**. - Realizar gráficas avanzadas con ggplot2. 
+
+**3**. - Elaborar un reporte dinámico en formato pdf con Rmarkdown.
+
+## **Librerías y comandos**.  
+  
+**{survival}**  
+Contiene rutinas básicas de análisis de supervivencia, incluida la definición de objetos de sobrevivenci, el cálculo de probabilidad y las curvas asociadas de Kaplan-Meier, así como las pruebas no paramétricas de comparación de curvas de sobrevivencia.
+
+**{survminer}**  
+Librería especializada en dibujar curvas de sobrevivencia usando "ggplot2".
+
+**Surv()**
+Crea un objeto de supervivencia, normalmente las variables stime y status son ambas variables respuesta en una fórmula de modelo lineal.
+
+**survdiff()**
+Permite probar si existen o no diferencias entre dos o más curvas de sobrevivencia.
+
+**survfit()**
+Cálcula probabilidad de sobrevivencia de Kaplan-Meier y otras.
+
+**ggsurvplot()**
+Permite graficar curvas de sobrevivencia usando ggplot2.
+
+## **EJERCICIOS**
+
+### **Ejercicio 1.** Elaborar y configurar Reporte en formato .Rmd
+
+Elabore un archivo Rmarkdown o file con extensión **.Rmd** en Rstudio o Rstudio.cloud y configurelo para exportar el resultado como un documento dinámico **pdf**. 
+
+En el primer bloque de códigos o **chunk** configure los comandos de la siguiente manera *knitr::opts_chunk$set(echo = TRUE)* y habilite la librería **survival** y **readxl** usando la función library().
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(readxl)
+library(survival)
+library(survminer)
+library(pander)
+```
+
+Ejecute cada uno de los siguientes ejercicios en uno o más bloques de códigos diferentes. Sea ordenado y documente su reporte adecuadamente.
+
+### **Ejercicio 2.** Análisis de sobrevivencia a patógenos.
+
+En el siguiente experimento se desea evaluar y comparar la probabilidad de sobrevivir del molusco ostión concha de abanico (*Argopecten purpuratus*) frente a un patógeno bacteriano. 
+
+En el estudio dos grupos de 15 ostiones se cultivan bajo las mismas condiciones ambientales pero en uno de ellos se adiciona un antibiótico natural para prevenir la mortalidad, mientras que el otro no.
+
+a) Escriba una hipótesis nula y alternativa para este experimento.
+
+```{r}
+
+# H0 : La sobrevivencia entre ostiones cultivados con o sin antibióticos es igual.
+# H1 : La sobrevivencia entre ostiones con o sin antibióticos es diferente.
+
+```
+
+b) Importe la hoja 1 set de datos **scallop_dat.xlsx** usando la función **read_excel()** de la librería *readxl*. No olvide usar el argumento *Sheet=1*. Explore el set de datos usando la función **summary()**. Luego transforme las variable antibiótico de caracter a factor con la función **as.factor()** y compruebe que se ha realizado el cambio con la función **str()**.
+
+```{r}
+scallop <- read_excel("scallop_dat.xlsx", sheet = 1)
+summary(scallop)
+scallop$antibiotico <- as.factor(scallop$antibiotico)
+str(scallop)
+```
+
+c) Calcule e imprima la probabilidad de sobrevivencia kaplan-meier del set de datos scallop. Siga el ejemplo visto en clases para construir el modelo y comparar entre grupos con y sin antibióticos usando las funciones **survfit()** y **Surv()**.
+
+```{r, echo=TRUE}
+p_scallop <- survfit(Surv(survival_time,survival_status)~strata(antibiotico),
+             data = scallop, na.action=na.exclude, type="kaplan-meier")
+
+summary(p_scallop)
+
+```
+
+d) Realice una prueba no paramétrica de Log rank test para comparar estadísticamente las curvas de supervivencia usando la función **survdiff()**.
+
+```{r}
+surv_diff <- survdiff(Surv(survival_time,survival_status)~antibiotico, data = scallop)
+surv_diff
+```
+
+e) Grafique los resultados con la función **ggsurvplot()** de la librería **survminer**.
+
+```{r, echo=TRUE}
+ggsurvplot(survfit(Surv(survival_time,survival_status) ~ antibiotico, data = scallop, na.action = na.exclude, type="kaplan-meier"),
+pval = TRUE, conf.int = FALSE)
+```
+
+
+f) Interprete sus resultados.
+
+
+### **Ejercicio 3.** Sensor ambiental de CO2.
+
+El C02 es un importante para los organismos vegetales y por tanto es una variable que se requiere monitorear de forma precisa en diversos contextos de investigación en Biociencias. Se desea calcular y comparar el tiempo medio de falla de un grupo de sensores de CO2 instalados en condiciones controladas de laboratorio y en condiciones de uso en terreno (Invernadero). Para ello se utilizó el siguiente registro de tiempos de falla (en días) de 10 sensores utilizados en ambos ambientes por 730 días, tiempo en el que se retiraron los sensores para mantención (tiempo de censura). 
+
+```{r, echo=FALSE}
+sensor_laboratorio <- c(683, 682, 730, 677, 730, 730, 730, 688, 681, 678)
+sensor_invernadero <- c(612, 590, 629, 665, 611, 628, 730, 589, 603, 661)
+
+dat <- data.frame(sensor_laboratorio, sensor_invernadero )
+  
+knitr::kable(dat, col.names=c("Control","Invernadero"), caption = "Tabla 1. Tiempo de falla y de censura de 10 sensores de CO2 utilizados en diferentes ambientes.")
+```
+
+a) Escriba una hipótesis nula y alternativa para este experimento.
+
+```{r}
+
+# H0 : El tiempo de falla es igual entre sensores utilizados en laboratorio o invernadero.
+# H1 : El tiempo de falla es diferente entre sensores utilizados en laboratorio o invernadero.
+
+```
+
+b) Elabore e importe una tabla excel con los datos de falla en un formato que permita realizar un estudio de tiempo de falla de los sensores.
+
+```{r}
+sensor <- read_excel("sensor.xlsx", sheet = 1)
+sensor$tratamiento <- as.factor(sensor$tratamiento)
+head(sensor)
+tail(sensor)
+```
+
+
+c) Calcule y compare la probabilidad de falla kaplan-meier del set de datos sensor usando las funciones **survfit** y **Surv**.
+
+```{r}
+p_sensor <- survfit(Surv(stime,status)~strata(tratamiento),
+             data = sensor, na.action=na.exclude, type="kaplan-meier")
+
+summary(p_sensor)
+
+```
+
+d) Realice una prueba no paramétrica de Log rank test para comparar estadísticamente los tiempos de falla usando la función **survdiff()**.
+
+```{r}
+surv_diff <- survdiff(Surv(stime,status)~tratamiento, data = sensor)
+surv_diff
+```
+
+e) Grafique los resultados con la función **ggsurvplot()** de la librería **survminer**.
+
+```{r}
+ggsurvplot(survfit(Surv(stime,status)~tratamiento, data = sensor, na.action = na.exclude, type="kaplan-meier"),
+pval = TRUE, conf.int = FALSE)
+```
+
+f) Interprete sus resultados.
