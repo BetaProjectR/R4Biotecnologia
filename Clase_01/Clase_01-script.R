@@ -1,8 +1,8 @@
 # ----------------------------------------------------------
 # Clase 01 - Programación con R
-# Dr. José Gallardo
-# 19 marzo 2022
-# DBT 845 - Investigación reproducible y análisis de datos biotecnológicos con R.
+# Dr. José Gallardo Matus
+# 03 septiembre 2022
+# 'Diplomado en Análisis de Datos con R e Investigación reproducible para Biociencias.'
 # ----------------------------------------------------------
 
 #R reconoce funciones matemáticos
@@ -37,7 +37,7 @@ search()
 list.files()
 
 # Crear un objeto
-Nombre <- c("José Gallardo", "Daniela López")
+Nombres <- c("José Gallardo", "Paz Caballero")
 
 # Características de un objeto
 class(Nombres)
